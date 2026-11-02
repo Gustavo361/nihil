@@ -1,23 +1,29 @@
 .home {
-  padding: 3rem 1.5rem;
   max-width: 40rem;
+  padding: var(--nihil-space-3);
+  background: var(--nihil-white);
+  border-radius: var(--nihil-radius-lg);
+  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
 }
 
 .brand {
-  margin: 0 0 0.75rem;
-  font-size: 1.75rem;
+  margin: 0 0 var(--nihil-space-1);
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nihil-purple);
 }
 
 h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
+  margin: 0 0 var(--nihil-space-1);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--nihil-text);
 }
 
 .lead {
   margin: 0;
   line-height: 1.5;
-  opacity: 0.8;
+  color: var(--nihil-muted);
 }

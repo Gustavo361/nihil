@@ -174,7 +174,7 @@ A versão exata das dependências deverá ser escolhida no início do projeto, p
 - Comunicação com o backend por API HTTP.
 - Testes, lint e formatação conforme a configuração escolhida.
 
-A biblioteca visual, o design system, o estilo visual, os componentes de UI e a estratégia de responsividade **ainda não foram definidos**. Não tomar decisões visuais definitivas sem discutir com o responsável pelo projeto.
+Identidade visual **inicial** definida (ADR `docs/decisions/0004-frontend-visual-identity.md`): paleta roxa `#6729F2` / `#9747FF`, superfície `#ECF2F9`, Plus Jakarta Sans, Tabler Icons, layout sidebar + área principal. Apache ECharts fica para dashboard/relatórios futuros. Evoluções do design system devem passar pelo responsável e atualizar o ADR.
 
 ### Banco de dados e hospedagem
 - **PostgreSQL** como banco relacional principal.

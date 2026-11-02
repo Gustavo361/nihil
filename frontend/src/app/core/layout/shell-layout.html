@@ -1,0 +1,46 @@
+<div class="shell" [class.shell--menu-open]="menuOpen()">
+  <button
+    type="button"
+    class="shell__menu-btn"
+    (click)="toggleMenu()"
+    [attr.aria-expanded]="menuOpen()"
+    aria-controls="nihil-sidebar"
+  >
+    <tabler-icon [icon]="menuOpen() ? iconClose : iconMenu" [size]="22" [stroke]="1.75" />
+    <span class="visually-hidden">{{ menuOpen() ? 'Fechar menu' : 'Abrir menu' }}</span>
+  </button>
+
+  @if (menuOpen()) {
+    <button
+      type="button"
+      class="shell__backdrop"
+      aria-label="Fechar menu"
+      (click)="closeMenu()"
+    ></button>
+  }
+
+  <div id="nihil-sidebar" class="shell__sidebar">
+    <app-sidebar [open]="menuOpen()" (navigate)="closeMenu()" />
+  </div>
+
+  <div class="shell__workspace">
+    <header class="shell__header">
+      <h1 class="shell__title">
+        <tabler-icon
+          class="shell__title-icon"
+          [icon]="pageMeta().icon"
+          [size]="26"
+          [stroke]="1.75"
+          aria-hidden="true"
+        />
+        <span>{{ pageMeta().title }}</span>
+      </h1>
+    </header>
+
+    <main class="shell__main">
+      <div class="shell__panel">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>

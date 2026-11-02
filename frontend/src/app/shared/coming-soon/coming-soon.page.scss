@@ -1,0 +1,29 @@
+.coming-soon {
+  max-width: 40rem;
+  padding: var(--nihil-space-2);
+  background: var(--nihil-white);
+  border-radius: var(--nihil-radius-lg);
+  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+}
+
+.coming-soon__eyebrow {
+  margin: 0 0 var(--nihil-space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nihil-purple);
+}
+
+h1 {
+  margin: 0 0 var(--nihil-space-1);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--nihil-text);
+}
+
+.coming-soon__lead {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--nihil-muted);
+}

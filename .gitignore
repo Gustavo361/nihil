@@ -38,3 +38,5 @@ frontend/coverage/
 # Local tooling
 .pnpm-store/
 *.iml
+.neon
+node_modules/

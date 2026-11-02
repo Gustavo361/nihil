@@ -27,6 +27,7 @@ Atualizar este arquivo **na preparação para commit** (ou quando o responsável
 
 ### Changed
 
+- UI `/estoque`: toolbar Dia + CTAs (registrar entradas / iniciar conferência) em linha; modais de entrada e conferência do dia (com cadastro de produto se faltar); KPI “Conferência do dia”; coluna Saldo usa contagem quando houver; tooltips nas colunas da tabela; label “Saídas estimadas”.
 - Removido Docker do fluxo local.
 - `dev` sobe backend + frontend **no mesmo terminal**; Job Object + `stop` no Ctrl+C.
 - Saída do `dev`: banner do backend → portas juntas (● verde) só quando frontend e backend respondem HTTP; erros relevantes no terminal; sem arquivo de log persistente.

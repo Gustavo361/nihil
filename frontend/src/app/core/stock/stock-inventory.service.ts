@@ -21,6 +21,19 @@ interface StockStoreV2 {
   items: StockItem[];
   movements: StockMovement[];
   days: StockDay[];
+  lastConference?: LastConferenceSummary | null;
+}
+
+/** Snapshot of the latest physical count session (SKU deltas, not mixed units). */
+export interface LastConferenceSummary {
+  at: string;
+  day: string;
+  /** Products whose counted qty was higher than estimated. */
+  entered: number;
+  /** Products whose counted qty was lower than estimated. */
+  exited: number;
+  /** Products with no change. */
+  unchanged: number;
 }
 
 export interface PurchaseReceiveInput {
@@ -60,6 +73,7 @@ export class StockInventoryService {
   readonly items = signal<StockItem[]>([]);
   readonly movements = signal<StockMovement[]>([]);
   readonly days = signal<StockDay[]>([]);
+  readonly lastConference = signal<LastConferenceSummary | null>(null);
 
   readonly itemCount = computed(() => this.items().length);
   readonly lowOrOutCount = computed(
@@ -75,10 +89,20 @@ export class StockInventoryService {
       this.items.set(store.items);
       this.movements.set(store.movements);
       this.days.set(store.days);
+      this.lastConference.set(store.lastConference ?? null);
     } else {
       this.seedDemoInventory();
     }
     this.ensureDay(todayKey());
+  }
+
+  /**
+   * Records how many products went up / down in the last conference batch.
+   * Call after computing deltas and applying submitCount for the session.
+   */
+  setLastConference(summary: LastConferenceSummary): void {
+    this.lastConference.set(summary);
+    this.persist();
   }
 
   /** Demo seed for empty storage — temporary until purchases/API are the only source. */
@@ -511,6 +535,7 @@ export class StockInventoryService {
       items: this.items(),
       movements: this.movements(),
       days: this.days(),
+      lastConference: this.lastConference(),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
@@ -555,6 +580,7 @@ function readStore(): StockStoreV2 | null {
       items: parsed.items,
       movements: Array.isArray(parsed.movements) ? parsed.movements : [],
       days: Array.isArray(parsed.days) ? parsed.days : [],
+      lastConference: parsed.lastConference ?? null,
     };
   } catch {
     return null;

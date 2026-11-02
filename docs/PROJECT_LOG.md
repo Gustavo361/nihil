@@ -6,6 +6,19 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 
 ---
 
+## 2026-11-02 — Estoque: conferência e entradas na operação do dia
+
+### Progresso
+
+- `/estoque`: CTAs “Registrar produtos que entraram” e “Iniciar conferência” (modais); KPI agregado da conferência do dia; Saldo exibe contado após conferência; tooltips nas colunas; `lastConference` no inventário local.
+
+### Próximos passos
+
+1. API de estoque no backend + troca do localStorage.
+2. Política definitiva de rendimento e baixas.
+
+---
+
 ## 2026-11-02 — Pratos e receitas + cadeia Compras/Estoque/Vendas (UI)
 
 ### Progresso

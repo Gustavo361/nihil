@@ -1,0 +1,544 @@
+<section class="stock">
+  <div class="stock__toolbar">
+    <div>
+      <p class="stock__eyebrow">Operação</p>
+      <p class="stock__lead">Saiba o que existe, quanto custa e o que precisa ser reposto.</p>
+    </div>
+    <button type="button" class="stock__cta" (click)="openMovement()">
+      <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+      Registrar movimentação
+    </button>
+  </div>
+
+  <div class="stock__kpis">
+    <article class="kpi">
+      <tabler-icon
+        class="kpi__icon"
+        [icon]="iconPackage"
+        [size]="22"
+        [stroke]="1.75"
+        aria-hidden="true"
+      />
+      <p class="kpi__label">Itens cadastrados</p>
+      <p class="kpi__value">{{ indicators().total.value }}</p>
+      <div class="kpi__footer">
+        <span>Últimos 7 dias</span>
+        <span class="kpi__badge" [class.kpi__badge--down]="!indicators().total.positive">
+          <tabler-icon
+            [icon]="indicators().total.up ? iconTrendUp : iconTrendDown"
+            [size]="14"
+            [stroke]="2"
+            aria-hidden="true"
+          />
+          {{ indicators().total.changePct | number: '1.2-2' }}%
+        </span>
+      </div>
+    </article>
+
+    <article class="kpi">
+      <tabler-icon
+        class="kpi__icon"
+        [icon]="iconAlert"
+        [size]="22"
+        [stroke]="1.75"
+        aria-hidden="true"
+      />
+      <p class="kpi__label">Estoque baixo / zerado</p>
+      <p class="kpi__value">{{ indicators().low.value }}</p>
+      <div class="kpi__footer">
+        <span>Últimos 7 dias</span>
+        <span class="kpi__badge" [class.kpi__badge--down]="!indicators().low.positive">
+          <tabler-icon
+            [icon]="indicators().low.up ? iconTrendUp : iconTrendDown"
+            [size]="14"
+            [stroke]="2"
+            aria-hidden="true"
+          />
+          {{ indicators().low.changePct | number: '1.2-2' }}%
+        </span>
+      </div>
+    </article>
+
+    <article class="kpi">
+      <tabler-icon
+        class="kpi__icon"
+        [icon]="iconMoney"
+        [size]="22"
+        [stroke]="1.75"
+        aria-hidden="true"
+      />
+      <p class="kpi__label">Valor estimado</p>
+      <p class="kpi__value">{{ indicators().estimated.value | currency: 'BRL':'symbol':'1.0-0' }}</p>
+      <div class="kpi__footer">
+        <span>Últimos 7 dias</span>
+        <span class="kpi__badge" [class.kpi__badge--down]="!indicators().estimated.positive">
+          <tabler-icon
+            [icon]="indicators().estimated.up ? iconTrendUp : iconTrendDown"
+            [size]="14"
+            [stroke]="2"
+            aria-hidden="true"
+          />
+          {{ indicators().estimated.changePct | number: '1.2-2' }}%
+        </span>
+      </div>
+    </article>
+  </div>
+
+  <div class="stock__grid" [class.stock__grid--detail]="selectedItem()">
+    <section class="panel">
+      <div class="panel__filters">
+        <label class="field field--search">
+          <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar por nome"
+            [ngModel]="search()"
+            (ngModelChange)="setSearch($event)"
+          />
+          @if (search().trim()) {
+            <button
+              type="button"
+              class="search-clear"
+              aria-label="Limpar busca"
+              (click)="clearSearch(); $event.preventDefault()"
+            >
+              <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+            </button>
+          }
+        </label>
+
+        <label class="field">
+          <span class="visually-hidden">Categoria</span>
+          <select [ngModel]="category()" (ngModelChange)="setCategory($event)">
+            <option value="">Todas as categorias</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="visually-hidden">Situação</span>
+          <select [ngModel]="status()" (ngModelChange)="setStatus($event)">
+            <option value="">Todas as situações</option>
+            <option value="ok">Normal</option>
+            <option value="low">Baixo</option>
+            <option value="out">Sem estoque</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Ingrediente</th>
+              <th>Qtd. disponível</th>
+              <th>Unidade</th>
+              <th>Custo unitário</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of pagedItems(); track item.id) {
+              <tr
+                [class.table__row--active]="selectedId() === item.id"
+                (click)="selectItem(item)"
+              >
+                <td>
+                  <div class="item-name">
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.category }}</span>
+                  </div>
+                </td>
+                <td>{{ item.quantity | number: '1.0-2' }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.unitCost | currency: 'BRL' }}</td>
+                <td>
+                  <span class="badge" [attr.data-status]="item.status">
+                    {{ statusLabel(item.status) }}
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="link-btn" (click)="selectItem(item); $event.stopPropagation()">
+                    Ver
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="table__empty">Nenhum item encontrado com os filtros atuais.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <p class="pager__summary">
+          @if (pageSummary().total === 0) {
+            Nenhum item
+          } @else {
+            {{ pageSummary().from }}–{{ pageSummary().to }} de {{ pageSummary().total }}
+          }
+        </p>
+        <div class="pager__controls">
+          <button
+            type="button"
+            class="pager__btn"
+            (click)="previousPage()"
+            [disabled]="currentPage() <= 1"
+            aria-label="Página anterior"
+          >
+            <tabler-icon [icon]="iconPrev" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          </button>
+          <span class="pager__page">Página {{ currentPage() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="pager__btn"
+            (click)="nextPage()"
+            [disabled]="currentPage() >= totalPages()"
+            aria-label="Próxima página"
+          >
+            <tabler-icon [icon]="iconNext" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      <p class="panel__note">Dados de demonstração da UI — ainda sem API de estoque.</p>
+    </section>
+
+    @if (selectedItem(); as item) {
+      <aside class="detail" aria-label="Detalhes do item">
+        <div class="detail__head">
+          <div>
+            <p class="detail__eyebrow">Detalhes</p>
+            <h2>{{ item.name }}</h2>
+            <p class="detail__meta">{{ item.category }} · mínimo {{ item.minQuantity }} {{ item.unit }}</p>
+          </div>
+          <button type="button" class="icon-btn" (click)="clearSelection()" aria-label="Fechar detalhes">
+            <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+          </button>
+        </div>
+
+        <div class="detail__stats">
+          <div>
+            <span>Disponível</span>
+            <strong>{{ item.quantity | number: '1.0-2' }} {{ item.unit }}</strong>
+          </div>
+          <div>
+            <span>Custo unitário</span>
+            <strong>{{ item.unitCost | currency: 'BRL' }}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>
+              <span class="badge" [attr.data-status]="item.status">{{ statusLabel(item.status) }}</span>
+            </strong>
+          </div>
+        </div>
+
+        <h3>Histórico de movimentações</h3>
+        <ul class="timeline">
+          @for (mov of selectedMovements(); track mov.id) {
+            <li>
+              <div class="timeline__badge" [attr.data-type]="mov.type">
+                {{ mov.type === 'in' ? 'Entrada' : 'Saída' }}
+              </div>
+              <div class="timeline__body">
+                <strong>{{ mov.quantity | number: '1.0-2' }} {{ mov.unit }}</strong>
+                <p>{{ mov.note }}</p>
+                <span>{{ mov.at | date: 'dd/MM/yyyy HH:mm' }} · {{ mov.user }}</span>
+              </div>
+            </li>
+          } @empty {
+            <li class="timeline__empty">Sem movimentações registradas para este item.</li>
+          }
+        </ul>
+      </aside>
+    }
+  </div>
+</section>
+
+@if (movementOpen()) {
+  <div class="modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="movementStep() === 'movement' ? 'movement-title' : 'create-title'">
+    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeMovement()"></button>
+    <div class="modal__card modal__card--form">
+      @if (movementStep() === 'movement') {
+        <div class="modal__head">
+          <h2 id="movement-title" class="modal__title">
+            <tabler-icon [icon]="iconPlus" [size]="20" [stroke]="2" aria-hidden="true" />
+            Registrar movimentação
+          </h2>
+          <button type="button" class="icon-btn" (click)="closeMovement()" aria-label="Fechar">
+            <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+          </button>
+        </div>
+
+        <p class="modal__lead">Entrada ou saída no estoque. Se o item não existir, cadastre na hora.</p>
+
+        <form class="modal-form" (ngSubmit)="submitMovement()">
+          <div class="modal-form__field modal-form__field--suggest">
+            <label for="movement-product">Item</label>
+            <div class="suggest">
+              <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+              <input
+                id="movement-product"
+                type="search"
+                autocomplete="off"
+                placeholder="Buscar ou digitar nome"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="movement-product-list"
+                [attr.aria-expanded]="productListOpen()"
+                [attr.aria-activedescendant]="
+                  productHighlightIndex() >= 0 && productSuggestions()[productHighlightIndex()]
+                    ? 'suggest-opt-' + productSuggestions()[productHighlightIndex()].id
+                    : null
+                "
+                [ngModel]="productQuery()"
+                (ngModelChange)="onProductQueryChange($event)"
+                (keydown)="onProductKeydown($event)"
+                (focus)="openProductList()"
+                (blur)="closeProductListSoon()"
+                name="productQuery"
+              />
+              @if (productQuery().trim()) {
+                <button
+                  type="button"
+                  class="search-clear"
+                  aria-label="Limpar item"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="clearProductQuery()"
+                >
+                  <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+                </button>
+              }
+            </div>
+
+            @if (productListOpen() && productSuggestions().length > 0) {
+              <ul id="movement-product-list" class="suggest__list" role="listbox">
+                @for (item of productSuggestions(); track item.id; let i = $index) {
+                  <li role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      [id]="'suggest-opt-' + item.id"
+                      [class.is-active]="productHighlightIndex() === i"
+                      [attr.aria-selected]="productHighlightIndex() === i"
+                      (mousedown)="pickProduct(item)"
+                    >
+                      <strong>{{ item.name }}</strong>
+                      <span>{{ item.category }} · {{ item.quantity | number: '1.0-2' }} {{ item.unit }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (selectedProduct(); as product) {
+              <p class="modal-form__hint">
+                Selecionado: {{ product.name }} · disponível {{ product.quantity | number: '1.0-2' }}
+                {{ product.unit }}
+              </p>
+            } @else if (noProductMatch()) {
+              <div class="suggest__empty">
+                <p>Nenhum item encontrado para “{{ productQuery().trim() }}”.</p>
+                <button type="button" class="link-btn" (click)="goToCreateItem()">
+                  Cadastrar “{{ productQuery().trim() }}”
+                </button>
+              </div>
+            }
+          </div>
+
+          <fieldset class="modal-form__type">
+            <legend>Tipo</legend>
+            <label class="modal-form__type-option" [class.is-active]="movementType() === 'in'" data-type="in">
+              <input
+                type="radio"
+                name="movementType"
+                value="in"
+                [ngModel]="movementType()"
+                (ngModelChange)="movementType.set($event)"
+              />
+              <tabler-icon [icon]="iconMoveIn" [size]="18" [stroke]="2" aria-hidden="true" />
+              Entrada
+            </label>
+            <label class="modal-form__type-option" [class.is-active]="movementType() === 'out'" data-type="out">
+              <input
+                type="radio"
+                name="movementType"
+                value="out"
+                [ngModel]="movementType()"
+                (ngModelChange)="movementType.set($event)"
+              />
+              <tabler-icon [icon]="iconMoveOut" [size]="18" [stroke]="2" aria-hidden="true" />
+              Saída
+            </label>
+          </fieldset>
+
+          <div class="modal-form__field">
+            <label for="movement-qty">Quantidade</label>
+            <input
+              id="movement-qty"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              name="movementQty"
+              [ngModel]="movementQtyText()"
+              (ngModelChange)="onMovementQtyInput($event)"
+              (keydown)="blockNonDigitKey($event)"
+              placeholder="0"
+            />
+          </div>
+
+          <div class="modal-form__field">
+            <label for="movement-note">Observação</label>
+            <input
+              id="movement-note"
+              type="text"
+              name="movementNote"
+              placeholder="Opcional — ex.: compra #1055"
+              [ngModel]="movementNote()"
+              (ngModelChange)="movementNote.set($event)"
+            />
+          </div>
+
+          @if (movementError()) {
+            <p class="modal-form__error" role="alert">{{ movementError() }}</p>
+          }
+
+          <div class="modal-form__actions">
+            <button type="submit" class="stock__cta">Salvar movimentação</button>
+            <button type="button" class="ghost-btn" (click)="closeMovement()">Cancelar</button>
+          </div>
+        </form>
+      } @else {
+        <div class="modal__head">
+          <div class="modal__title-row">
+            <button type="button" class="icon-btn" (click)="backToMovement()" aria-label="Voltar">
+              <tabler-icon [icon]="iconBack" [size]="18" [stroke]="1.75" />
+            </button>
+            <h2 id="create-title">Cadastro rápido</h2>
+          </div>
+          <button type="button" class="icon-btn" (click)="closeMovement()" aria-label="Fechar">
+            <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+          </button>
+        </div>
+
+        <p class="modal__lead">
+          Dados mínimos para usar o item agora. Depois você pode completar o cadastro no estoque.
+        </p>
+
+        <form class="modal-form" (ngSubmit)="saveQuickItem()">
+          <div class="modal-form__field">
+            <label for="create-name">Nome</label>
+            <input
+              id="create-name"
+              type="text"
+              name="createName"
+              [ngModel]="createName()"
+              (ngModelChange)="createName.set($event)"
+              required
+            />
+          </div>
+
+          <div class="modal-form__row modal-form__row--2">
+            <div class="modal-form__field">
+              <label for="create-category">Categoria</label>
+              <select
+                id="create-category"
+                name="createCategory"
+                [ngModel]="createCategory()"
+                (ngModelChange)="createCategory.set($event)"
+              >
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="modal-form__field">
+              <label for="create-unit">Unidade</label>
+              <select
+                id="create-unit"
+                name="createUnit"
+                [ngModel]="createUnit()"
+                (ngModelChange)="createUnit.set($event)"
+              >
+                @for (unit of units; track unit) {
+                  <option [value]="unit">{{ unit }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-form__row modal-form__row--2">
+            <div class="modal-form__field">
+              <label for="create-cost">Custo unitário</label>
+              <div class="money-field">
+                <span aria-hidden="true">R$</span>
+                <input
+                  id="create-cost"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  name="createUnitCost"
+                  [ngModel]="createUnitCostText()"
+                  (ngModelChange)="onCreateUnitCostInput($event)"
+                  (keydown)="blockNonDigitKey($event)"
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+
+            <div class="modal-form__field">
+              <label for="create-min">Estoque mínimo</label>
+              <div class="stepper-field">
+                <input
+                  id="create-min"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  name="createMinQty"
+                  [ngModel]="createMinQtyText()"
+                  (ngModelChange)="onCreateMinQtyInput($event)"
+                  (keydown)="onCreateMinQtyKeydown($event)"
+                  placeholder="0"
+                />
+                <div class="stepper-field__arrows">
+                  <button
+                    type="button"
+                    class="stepper-field__btn"
+                    aria-label="Aumentar estoque mínimo"
+                    (click)="bumpCreateMinQty(1)"
+                  >
+                    <tabler-icon [icon]="iconChevronUp" [size]="14" [stroke]="2" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    class="stepper-field__btn"
+                    aria-label="Diminuir estoque mínimo"
+                    (click)="bumpCreateMinQty(-1)"
+                  >
+                    <tabler-icon [icon]="iconChevronDown" [size]="14" [stroke]="2" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (createError()) {
+            <p class="modal-form__error" role="alert">{{ createError() }}</p>
+          }
+
+          <div class="modal-form__actions">
+            <button type="submit" class="stock__cta">Salvar e continuar</button>
+            <button type="button" class="ghost-btn" (click)="backToMovement()">Cancelar</button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+}

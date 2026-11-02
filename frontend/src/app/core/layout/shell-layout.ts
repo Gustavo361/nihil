@@ -1,9 +1,14 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import {
+  IconBell,
+  IconChevronDown,
+  IconChevronUp,
   IconLayoutDashboard,
   IconMenu2,
+  IconMoon,
+  IconSun,
   IconX,
   TablerIconComponent,
   type TablerIcon,
@@ -11,6 +16,8 @@ import {
 import { filter, map, startWith } from 'rxjs';
 import { AppSidebar } from './app-sidebar';
 import { NIHIL_NAV_GROUPS } from './nav.config';
+
+type HeaderMenu = 'notifications' | 'theme' | null;
 
 @Component({
   selector: 'app-shell-layout',
@@ -20,10 +27,19 @@ import { NIHIL_NAV_GROUPS } from './nav.config';
 })
 export class ShellLayout {
   private readonly router = inject(Router);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   readonly menuOpen = signal(false);
+  readonly openHeaderMenu = signal<HeaderMenu>(null);
+  readonly themeMode = signal<'light' | 'dark'>('light');
+
   readonly iconMenu = IconMenu2;
   readonly iconClose = IconX;
+  readonly iconBell = IconBell;
+  readonly iconTheme = IconMoon;
+  readonly iconSun = IconSun;
+  readonly iconChevronDown = IconChevronDown;
+  readonly iconChevronUp = IconChevronUp;
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -55,8 +71,43 @@ export class ShellLayout {
     this.menuOpen.set(false);
   }
 
+  toggleHeaderMenu(menu: Exclude<HeaderMenu, null>, event: Event): void {
+    event.stopPropagation();
+    this.openHeaderMenu.update((current) => (current === menu ? null : menu));
+  }
+
+  closeHeaderMenus(): void {
+    this.openHeaderMenu.set(null);
+  }
+
+  setTheme(mode: 'light' | 'dark'): void {
+    this.themeMode.set(mode);
+    // Placeholder until theme tokens/switcher are wired.
+    this.closeHeaderMenus();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.openHeaderMenu()) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (target && !this.host.nativeElement.contains(target)) {
+      this.closeHeaderMenus();
+      return;
+    }
+    const el = target as HTMLElement | null;
+    if (el && !el.closest('.shell__header-menu')) {
+      this.closeHeaderMenus();
+    }
+  }
+
   @HostListener('window:keydown.escape')
   onEscape(): void {
+    if (this.openHeaderMenu()) {
+      this.closeHeaderMenus();
+      return;
+    }
     this.closeMenu();
   }
 

@@ -499,6 +499,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 - [x] Docker removido do fluxo local (`docker-compose.yml` e scripts associados).
 - [x] Atalhos na raiz (`dev` / `setup` / `stop`) e `package.json` com `pnpm dev`.
 - [x] Banner Spring Boot (`banner.txt`) + saída enxuta do `dev` (portas juntas quando prontas).
+- [x] Shell layout + sidebar; UI mock de Estoque (listagem/modal/movimentação) sem API.
 - [ ] CI básica configurada no GitHub.
 - [ ] Backups e procedimento de restauração documentados e testados.
 - [ ] Repositório GitHub remoto / push — fora do escopo desta etapa (sem commit/push).
@@ -517,9 +518,9 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 
 ### 14.3 Próxima tarefa
 
-- **Próxima tarefa:** instalar PostgreSQL local (serviço Windows), configurar `DB_*` e validar perfil `dev`; em seguida requisitos do primeiro módulo (provavelmente estoque).
-- **Pré-requisitos:** PostgreSQL local; credenciais apenas via variáveis de ambiente; sem Docker.
-- **Critério de conclusão:** backend sobe no perfil `dev` contra PostgreSQL real; migração baseline aplicada; próximo módulo com requisitos escritos.
+- **Próxima tarefa:** requisitos do módulo estoque em `docs/requirements/`; depois API de estoque substituindo o mock da UI.
+- **Pré-requisitos:** decisões de regra de negócio de estoque com o responsável; PostgreSQL/`DB_*` quando for persistir.
+- **Critério de conclusão:** requisitos escritos e validados; endpoints de estoque cobrindo o fluxo da UI mock.
 
 ---
 

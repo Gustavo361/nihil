@@ -10,6 +10,9 @@ Atualizar este arquivo **na preparação para commit** (ou quando o responsável
 
 ### Added
 
+- UI/UX do módulo Estoque (mock local, sem API): listagem, filtros, paginação, KPIs, detalhe com histórico e modal de movimentação com cadastro rápido de item.
+- Menus do header (notificações e modo claro/escuro) com dropdown e seta.
+- Locale `pt-BR` no frontend para formatação monetária.
 - Fundação do monólito modular: backend Spring Boot 4.1.2 (Java 21) e frontend Angular 22 + pnpm.
 - Perfis de backend `smoke` (H2), `dev`/`prod` (PostgreSQL via `DB_*`), `test` (H2).
 - Flyway com baseline `V1__foundation_baseline.sql`.

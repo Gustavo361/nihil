@@ -6,6 +6,23 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 
 ---
 
+## 2026-11-02 — UI Estoque + header (mock)
+
+### Progresso
+
+- Página `/estoque` com dados mock: KPIs, tabela filtrável, paginação (20), painel de detalhes e histórico.
+- Modal “Registrar movimentação” em etapas (busca/seleção → cadastro rápido se item não existir → entrada/saída).
+- Header: dropdowns de notificações e modo (placeholder de tema).
+- Sem integração Neon/API neste commit — apenas frontend UI/UX.
+
+### Próximos passos
+
+1. Requisitos reais de estoque em `docs/requirements/`.
+2. API de estoque no backend + troca do mock.
+3. Tema claro/escuro de verdade e notificações reais.
+
+---
+
 ## 2026-11-02 — Fundação (estado atual)
 
 ### Progresso

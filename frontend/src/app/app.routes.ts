@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { ShellLayout } from './core/layout/shell-layout';
+import { StockPage } from './features/estoque/stock.page';
 import { HomePage } from './features/home/home.page';
 import { ComingSoonPage } from './shared/coming-soon/coming-soon.page';
 
@@ -16,7 +17,7 @@ export const routes: Routes = [
       { path: '', component: HomePage },
       { path: 'vendas', ...comingSoon('Vendas') },
       { path: 'pratos-receitas', ...comingSoon('Pratos e receitas') },
-      { path: 'estoque', ...comingSoon('Estoque') },
+      { path: 'estoque', component: StockPage },
       { path: 'compras', ...comingSoon('Compras') },
       { path: 'fornecedores', ...comingSoon('Fornecedores') },
       { path: 'caixa', ...comingSoon('Caixa') },

@@ -263,7 +263,7 @@
 
 @if (movementOpen()) {
   <div class="modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="movementStep() === 'movement' ? 'movement-title' : 'create-title'">
-    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeMovement()"></button>
+    <div class="modal__backdrop" aria-hidden="true"></div>
     <div class="modal__card modal__card--form">
       @if (movementStep() === 'movement') {
         <div class="modal__head">

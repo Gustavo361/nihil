@@ -335,6 +335,16 @@
   color: var(--nihil-danger);
 }
 
+.amount--in {
+  color: #0f9f6e;
+  font-weight: 700;
+}
+
+.amount--out {
+  color: var(--nihil-danger);
+  font-weight: 700;
+}
+
 .link-btn {
   border: 0;
   background: transparent;
@@ -547,7 +557,7 @@
   inset: 0;
   border: 0;
   background: rgba(48, 45, 80, 0.4);
-  cursor: pointer;
+  cursor: default;
 }
 
 .modal__card {

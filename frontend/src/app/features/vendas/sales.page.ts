@@ -21,8 +21,10 @@ import {
   IconX,
   TablerIconComponent,
 } from '@tabler/icons-angular';
+import { CashRegisterService } from '../../core/cash/cash-register.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import type { CashPaymentMethod } from '../caixa/cash.models';
 import {
   DEFAULT_BUFFET_PRICE,
   DEFAULT_KG_PRICE,
@@ -39,6 +41,8 @@ import {
 } from './sales.models';
 
 const PAGE_SIZE = 20;
+/** Sales older than this window are hidden from the UI (inclusive of today). */
+const SALES_VISIBLE_DAYS = 7;
 
 type SaleWizardStep = 'modality' | 'details' | 'payment';
 
@@ -50,11 +54,13 @@ type SaleWizardStep = 'modality' | 'details' | 'payment';
 })
 export class SalesPage implements OnDestroy {
   private readonly toast = inject(ToastService);
+  private readonly cashRegister = inject(CashRegisterService);
   private readonly dishSuggestAnchor = viewChild<ElementRef<HTMLElement>>('dishSuggestAnchor');
   private readonly dishSuggestScrollParents: HTMLElement[] = [];
   private readonly onDishSuggestReposition = () => this.syncDishSuggestPanel();
 
   readonly pageSize = PAGE_SIZE;
+  readonly salesVisibleDays = SALES_VISIBLE_DAYS;
   readonly iconPlus = IconPlus;
   readonly iconSearch = IconSearch;
   readonly iconCart = IconShoppingCart;
@@ -121,6 +127,9 @@ export class SalesPage implements OnDestroy {
   readonly cancelReason = signal('');
   readonly cancelError = signal('');
 
+  readonly periodMin = computed(() => this.dayOffsetInputValue(-(SALES_VISIBLE_DAYS - 1)));
+  readonly periodMax = computed(() => this.todayInputValue());
+
   readonly filteredSales = computed(() => {
     const q = this.search().trim().toLowerCase();
     const mod = this.modalityFilter();
@@ -128,6 +137,7 @@ export class SalesPage implements OnDestroy {
     const day = this.period();
     return this.sales()
       .filter((sale) => {
+        if (!this.isWithinSalesWindow(sale.at)) return false;
         if (day && this.localDayKey(sale.at) !== day) return false;
         if (mod && sale.modality !== mod) return false;
         if (st && sale.status !== st) return false;
@@ -162,7 +172,9 @@ export class SalesPage implements OnDestroy {
 
   readonly dayIndicators = computed(() => {
     const day = this.period();
-    const ofDay = this.sales().filter((s) => this.localDayKey(s.at) === day);
+    const ofDay = this.sales().filter(
+      (s) => this.isWithinSalesWindow(s.at) && this.localDayKey(s.at) === day,
+    );
     const confirmed = ofDay.filter((s) => s.status === 'confirmed');
     const count = confirmed.length;
     const revenue = confirmed.reduce((sum, s) => sum + s.total, 0);
@@ -241,7 +253,16 @@ export class SalesPage implements OnDestroy {
   }
 
   setPeriod(value: string): void {
-    this.period.set(value || this.todayInputValue());
+    const next = value || this.todayInputValue();
+    const min = this.periodMin();
+    const max = this.periodMax();
+    if (next < min) {
+      this.period.set(min);
+    } else if (next > max) {
+      this.period.set(max);
+    } else {
+      this.period.set(next);
+    }
     this.page.set(1);
   }
 
@@ -448,13 +469,29 @@ export class SalesPage implements OnDestroy {
       lines: mod === 'dishes' ? this.cart().map((l) => ({ ...l })) : undefined,
     };
 
-    // Session-only until sales API exists — no finance/stock side effects.
+    // Session-only until sales API exists — stock side effects still pending.
     this.sales.update((list) => [sale, ...list]);
     this.selectedId.set(sale.id);
     this.period.set(this.todayInputValue());
     this.saving.set(false);
     this.closeWizard();
-    this.toast.success(`Venda ${sale.id} registrada.`);
+
+    const cashResult = this.cashRegister.postSaleReceipt({
+      saleId: sale.id,
+      amount: sale.total,
+      paymentMethod: sale.payment as CashPaymentMethod,
+      summary: sale.summary,
+      at: sale.at,
+    });
+    if (cashResult === 'posted') {
+      this.toast.success(`Venda ${sale.id} registrada e lançada no caixa.`);
+    } else if (cashResult === 'queued') {
+      this.toast.success(`Venda ${sale.id} registrada.`, {
+        highlight: 'Caixa fechado — recebimento na fila até a abertura.',
+      });
+    } else {
+      this.toast.success(`Venda ${sale.id} registrada.`);
+    }
   }
 
   openCancel(): void {
@@ -493,8 +530,16 @@ export class SalesPage implements OnDestroy {
           : s,
       ),
     );
+
+    const reverse = this.cashRegister.reverseSaleReceipt(sale.id, reason);
     this.closeCancel();
-    this.toast.info(`Venda ${sale.id} cancelada.`);
+    if (reverse === 'reversed') {
+      this.toast.info(`Venda ${sale.id} cancelada e estornada no caixa.`);
+    } else if (reverse === 'removed_pending') {
+      this.toast.info(`Venda ${sale.id} cancelada — removida da fila do caixa.`);
+    } else {
+      this.toast.info(`Venda ${sale.id} cancelada.`);
+    }
   }
 
   modalityLabel(mod: SaleModality): string {
@@ -657,6 +702,13 @@ export class SalesPage implements OnDestroy {
     return this.localDayKey(new Date().toISOString());
   }
 
+  private dayOffsetInputValue(offsetDays: number): string {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() + offsetDays);
+    return this.localDayKey(d.toISOString());
+  }
+
   private localDayKey(iso: string): string {
     const d = new Date(iso);
     const y = d.getFullYear();
@@ -665,9 +717,17 @@ export class SalesPage implements OnDestroy {
     return `${y}-${m}-${day}`;
   }
 
+  private isWithinSalesWindow(iso: string): boolean {
+    const key = this.localDayKey(iso);
+    return key >= this.periodMin() && key <= this.periodMax();
+  }
+
   private nextSaleId(now: Date): string {
     const y = now.getFullYear();
-    const seq = String(this.sales().length + 1).padStart(4, '0');
-    return `V${y}-${seq}`;
+    const stamp = now.getTime().toString(36).toUpperCase();
+    const rand = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `V${y}-${stamp}-${rand}`;
   }
 }

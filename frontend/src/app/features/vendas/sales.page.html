@@ -5,12 +5,19 @@
       <h1 class="visually-hidden">Vendas</h1>
       <p class="sales__lead">
         Registre buffet livre, marmita por kg e pratos prontos no balcão — sem delivery nem mesas.
+        Histórico visível dos últimos {{ salesVisibleDays }} dias.
       </p>
     </div>
     <div class="sales__toolbar-actions">
       <label class="period-field">
         <span>Período</span>
-        <input type="date" [ngModel]="period()" (ngModelChange)="setPeriod($event)" />
+        <input
+          type="date"
+          [ngModel]="period()"
+          (ngModelChange)="setPeriod($event)"
+          [min]="periodMin()"
+          [max]="periodMax()"
+        />
       </label>
       <button type="button" class="sales__cta" (click)="openWizard()">
         <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
@@ -117,7 +124,13 @@
                 <td>{{ sale.at | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td>{{ modalityLabel(sale.modality) }}</td>
                 <td class="table__clip">{{ sale.summary }}</td>
-                <td>{{ sale.total | currency: 'BRL' }}</td>
+                <td
+                  class="amount"
+                  [class.amount--in]="sale.status === 'confirmed'"
+                  [class.amount--out]="sale.status === 'cancelled'"
+                >
+                  {{ sale.total | currency: 'BRL' }}
+                </td>
                 <td>{{ paymentLabel(sale.payment) }}</td>
                 <td>
                   <span class="badge" [attr.data-status]="sale.status">
@@ -190,7 +203,13 @@
         <div class="detail__stats">
           <div>
             <span>Total</span>
-            <strong>{{ sale.total | currency: 'BRL' }}</strong>
+            <strong
+              class="amount"
+              [class.amount--in]="sale.status === 'confirmed'"
+              [class.amount--out]="sale.status === 'cancelled'"
+            >
+              {{ sale.total | currency: 'BRL' }}
+            </strong>
           </div>
           <div>
             <span>Pagamento</span>
@@ -241,7 +260,7 @@
 
 @if (wizardOpen()) {
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sale-wizard-title">
-    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeWizard()"></button>
+    <div class="modal__backdrop" aria-hidden="true"></div>
     <div class="modal__card modal__card--wide">
       <div class="modal__head">
         <h2 id="sale-wizard-title" class="modal__title">
@@ -487,7 +506,7 @@
 
 @if (cancelOpen()) {
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
-    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeCancel()"></button>
+    <div class="modal__backdrop" aria-hidden="true"></div>
     <div class="modal__card">
       <div class="modal__head">
         <h2 id="cancel-title">Cancelar venda</h2>

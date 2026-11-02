@@ -10,7 +10,12 @@
       <span class="toast__icon" aria-hidden="true">
         <tabler-icon [icon]="iconFor(toast)" [size]="18" [stroke]="2" />
       </span>
-      <p class="toast__message">{{ toast.message }}</p>
+      <div class="toast__message">
+        <span class="toast__text">{{ toast.message }}</span>
+        @if (toast.highlight) {
+          <span class="toast__mark">{{ toast.highlight }}</span>
+        }
+      </div>
       <button type="button" class="toast__close" aria-label="Fechar" (click)="dismiss(toast)">
         <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
       </button>

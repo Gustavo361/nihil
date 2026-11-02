@@ -143,6 +143,13 @@
   outline: none;
 }
 
+.field input[type='search']::-webkit-search-decoration,
+.field input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 .search-clear {
   display: grid;
   place-items: center;
@@ -186,6 +193,24 @@
   margin-top: 2px;
   color: var(--nihil-muted);
   font-size: 0.8125rem;
+}
+
+.table__actions {
+  white-space: nowrap;
+}
+
+.link-btn {
+  border: 0;
+  background: transparent;
+  color: var(--nihil-purple);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 10px;
+}
+
+.link-btn--danger {
+  color: var(--nihil-danger);
 }
 
 .table__empty {

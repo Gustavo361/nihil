@@ -16,4 +16,6 @@ export interface Purchase {
   summary: string;
   totalCost: number;
   line: PurchaseLineSnapshot;
+  /** Optional observation saved with the receipt. */
+  note?: string;
 }

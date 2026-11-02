@@ -66,6 +66,7 @@
             <th>Qtd</th>
             <th>Custo un.</th>
             <th>Total</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -82,10 +83,16 @@
               <td>{{ p.line.quantity }} {{ p.line.unit }}</td>
               <td>{{ p.line.unitCost | currency: 'BRL' }}</td>
               <td>{{ p.totalCost | currency: 'BRL' }}</td>
+              <td class="table__actions">
+                <button type="button" class="link-btn" (click)="openEdit(p)">Editar</button>
+                <button type="button" class="link-btn link-btn--danger" (click)="removePurchase(p)">
+                  Excluir
+                </button>
+              </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="table__empty">
+              <td colspan="7" class="table__empty">
                 <div class="empty">
                   <p>Nenhuma compra registrada.</p>
                   <button type="button" class="purchases__cta" (click)="openCreate()">
@@ -106,13 +113,19 @@
     <div class="modal__backdrop" aria-hidden="true"></div>
     <div class="modal__card modal__card--wide">
       <div class="modal__head">
-        <h2 id="purchase-title" class="modal__title">Nova compra / entrada</h2>
+        <h2 id="purchase-title" class="modal__title">
+          {{ isEditing() ? 'Editar compra' : 'Nova compra / entrada' }}
+        </h2>
         <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
           <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
         </button>
       </div>
       <p class="modal__lead">
-        Informe o produto recebido. Se o nome já existir, só a quantidade entra no estoque do dia.
+        @if (isEditing()) {
+          Altere nome, quantidade, custo ou demais dados. A mudança atualiza o produto e o estoque.
+        } @else {
+          Informe o produto recebido. Se o nome já existir, só a quantidade entra no estoque do dia.
+        }
       </p>
 
       <form class="modal-form" (ngSubmit)="save()">
@@ -127,7 +140,11 @@
             name="purchaseName"
             placeholder="Ex.: Arroz tipo 1"
           />
-          @if (existingHint(); as existing) {
+          @if (isEditing()) {
+            <p class="modal-form__hint">
+              Alterar o nome renomeia o produto no estoque (e nas outras compras desse item).
+            </p>
+          } @else if (existingHint(); as existing) {
             <p class="modal-form__hint">
               Já cadastrado ({{ existing.quantity }} {{ existing.unit }} · un. {{ existing.unit }}).
               Nova entrada usará a mesma unidade.
@@ -148,7 +165,7 @@
           </div>
           <div class="modal-form__field">
             <label>Unidade de estoque</label>
-            @if (existingHint(); as existing) {
+            @if (!isEditing() && existingHint(); as existing) {
               <input type="text" [value]="existing.unit" readonly />
             } @else {
               <app-nihil-select
@@ -198,11 +215,12 @@
             <div class="money-field">
               <span aria-hidden="true">R$</span>
               <input
+                #purchaseCostInput
                 id="purchase-cost"
                 type="text"
-                inputmode="numeric"
+                inputmode="decimal"
                 [ngModel]="unitCostText()"
-                (ngModelChange)="onMoneyInput($event)"
+                (ngModelChange)="onMoneyInput($event, purchaseCostInput)"
                 name="purchaseCost"
                 placeholder="0,00"
               />
@@ -238,7 +256,9 @@
         }
 
         <div class="modal-form__actions">
-          <button type="submit" class="purchases__cta" [disabled]="saving()">Salvar entrada</button>
+          <button type="submit" class="purchases__cta" [disabled]="saving()">
+            {{ isEditing() ? 'Salvar alterações' : 'Salvar entrada' }}
+          </button>
           <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">
             Cancelar
           </button>

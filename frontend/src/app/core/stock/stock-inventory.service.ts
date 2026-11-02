@@ -47,6 +47,8 @@ export interface PurchaseReceiveInput {
   packageWeightKg?: number;
   at?: string;
   note?: string;
+  /** When set, update this SKU (incl. rename) instead of resolving by name. */
+  stockItemId?: string;
 }
 
 export interface SaleOutLineInput {
@@ -213,36 +215,58 @@ export class StockInventoryService {
     this.ensureDay(dayKey);
 
     let created = false;
-    let item = this.findByName(name);
-    if (!item) {
-      created = true;
+    let item: StockItem | undefined;
+
+    if (input.stockItemId) {
+      item = this.findById(input.stockItemId);
+      if (!item) throw new Error('Produto não encontrado.');
+      const clash = this.findByName(name);
+      if (clash && clash.id !== item.id) {
+        throw new Error(`Já existe outro produto chamado “${clash.name}”.`);
+      }
       item = {
-        id: nextId('item'),
+        ...item,
         name,
-        category: input.category,
-        quantity: 0,
+        category: input.category || item.category,
         unit: input.unit,
         unitCost: roundMoney(input.unitCost),
         minQuantity: input.minQuantity,
-        status: 'out',
         packageWeightKg: needsWeight ? input.packageWeightKg : undefined,
       };
-      this.items.update((list) => [item!, ...list]);
-      this.addItemToDay(dayKey, item.id, 0);
-    } else {
-      item = {
-        ...item,
-        category: input.category || item.category,
-        unitCost: roundMoney(input.unitCost),
-        minQuantity: input.minQuantity,
-        packageWeightKg: needsWeight
-          ? input.packageWeightKg
-          : item.unit === input.unit
-            ? item.packageWeightKg
-            : undefined,
-        unit: item.unit, // unit locked after create
-      };
       this.items.update((list) => list.map((i) => (i.id === item!.id ? item! : i)));
+      this.addItemToDay(dayKey, item.id, item.quantity);
+    } else {
+      item = this.findByName(name);
+      if (!item) {
+        created = true;
+        item = {
+          id: nextId('item'),
+          name,
+          category: input.category,
+          quantity: 0,
+          unit: input.unit,
+          unitCost: roundMoney(input.unitCost),
+          minQuantity: input.minQuantity,
+          status: 'out',
+          packageWeightKg: needsWeight ? input.packageWeightKg : undefined,
+        };
+        this.items.update((list) => [item!, ...list]);
+        this.addItemToDay(dayKey, item.id, 0);
+      } else {
+        item = {
+          ...item,
+          category: input.category || item.category,
+          unitCost: roundMoney(input.unitCost),
+          minQuantity: input.minQuantity,
+          packageWeightKg: needsWeight
+            ? input.packageWeightKg
+            : item.unit === input.unit
+              ? item.packageWeightKg
+              : undefined,
+          unit: item.unit,
+        };
+        this.items.update((list) => list.map((i) => (i.id === item!.id ? item! : i)));
+      }
     }
 
     const qty = roundQty(input.quantity);
@@ -263,6 +287,75 @@ export class StockInventoryService {
     this.recomputeItemQuantities(dayKey);
     this.persist();
     return { item, created };
+  }
+
+  /**
+   * Undo purchase_in movements for a purchase id and subtract day purchasedQty.
+   * Does not delete the product SKU (caller may remove orphans).
+   */
+  reversePurchase(purchaseId: string): { reversed: boolean; itemIds: string[] } {
+    const related = this.movements().filter(
+      (m) => m.type === 'purchase_in' && m.refType === 'purchase' && m.refId === purchaseId,
+    );
+    if (!related.length) return { reversed: false, itemIds: [] };
+
+    this.movements.set(
+      this.movements().filter(
+        (m) => !(m.type === 'purchase_in' && m.refType === 'purchase' && m.refId === purchaseId),
+      ),
+    );
+
+    const byDay = new Map<string, Map<string, number>>();
+    const itemIds = new Set<string>();
+    for (const m of related) {
+      itemIds.add(m.itemId);
+      const dayKey = localDayKey(m.at);
+      if (!byDay.has(dayKey)) byDay.set(dayKey, new Map());
+      const map = byDay.get(dayKey)!;
+      map.set(m.itemId, roundQty((map.get(m.itemId) ?? 0) + m.quantity));
+    }
+
+    for (const [dayKey, map] of byDay) {
+      this.ensureDay(dayKey);
+      this.days.update((days) =>
+        days.map((d) => {
+          if (d.date !== dayKey) return d;
+          return {
+            ...d,
+            lines: d.lines.map((line) => {
+              const delta = map.get(line.itemId);
+              if (!delta) return line;
+              return {
+                ...line,
+                purchasedQty: roundQty(Math.max(0, line.purchasedQty - delta)),
+                countedQty: undefined,
+                countedAt: undefined,
+              };
+            }),
+          };
+        }),
+      );
+      this.recomputeItemQuantities(dayKey);
+    }
+
+    this.persist();
+    return { reversed: true, itemIds: [...itemIds] };
+  }
+
+  /** Drop a product with no remaining movements (e.g. purchase that created it was deleted). */
+  removeItemIfUnused(itemId: string): boolean {
+    if (this.movements().some((m) => m.itemId === itemId)) return false;
+    const existed = this.items().some((i) => i.id === itemId);
+    if (!existed) return false;
+    this.items.update((list) => list.filter((i) => i.id !== itemId));
+    this.days.update((days) =>
+      days.map((d) => ({
+        ...d,
+        lines: d.lines.filter((l) => l.itemId !== itemId),
+      })),
+    );
+    this.persist();
+    return true;
   }
 
   /** Apply estimated outs already converted to stock units (one sale). */

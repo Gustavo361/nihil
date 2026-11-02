@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: nihil-backend
+  profiles:
+    default: dev
+  banner:
+    location: classpath:banner.txt
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# @project.version@ is replaced by Maven resource filtering (spring-boot parent).
+nihil:
+  version: @project.version@
+
+info:
+  app:
+    name: Nihil
+    description: Restaurant internal management system
+    version: @project.version@
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    root: WARN
+    com.nihil: INFO
+    org.springframework.boot.web.embedded.tomcat.TomcatWebServer: WARN
+    org.hibernate.orm.connections.pooling: WARN

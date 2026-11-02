@@ -1,0 +1,12 @@
+${AnsiColor.BRIGHT_WHITE}
+========================================
+             N I H I L
+       Restaurant Management System
+========================================
+${AnsiColor.DEFAULT}
+Application : Nihil
+Version     : ${nihil.version:${application.version:unknown}}
+Java        : ${java.version}
+Spring Boot : ${spring-boot.version}
+Environment : ${spring.profiles.active:default}
+HTTP Port   : ${server.port:8080}

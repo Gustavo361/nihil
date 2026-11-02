@@ -1,0 +1,18 @@
+# Perfil local sem PostgreSQL (H2 em memória).
+# Útil para validar boot da API. Desenvolvimento real usa o perfil `dev`.
+spring:
+  datasource:
+    url: jdbc:h2:mem:nihil;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: WARN

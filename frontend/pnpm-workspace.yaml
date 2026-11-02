@@ -1,0 +1,7 @@
+# pnpm 12+: settings live here (not under package.json "pnpm").
+dangerouslyAllowAllBuilds: true
+onlyBuiltDependencies:
+  - esbuild
+  - '@parcel/watcher'
+  - lmdb
+  - msgpackr-extract

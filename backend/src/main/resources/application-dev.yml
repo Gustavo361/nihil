@@ -1,0 +1,14 @@
+# Desenvolvimento local com PostgreSQL real.
+# Credenciais apenas por variáveis de ambiente (ver backend/.env.example).
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/nihil}
+    username: ${DB_USERNAME:nihil}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG

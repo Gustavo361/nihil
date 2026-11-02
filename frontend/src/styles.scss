@@ -1,0 +1,20 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  color: #1a1a1a;
+  background: #f7f5f2;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at top left, rgba(40, 90, 70, 0.08), transparent 40%),
+    linear-gradient(180deg, #f7f5f2 0%, #efeae3 100%);
+}

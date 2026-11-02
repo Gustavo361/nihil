@@ -1,0 +1,14 @@
+---
+description: Documentação de progresso (CHANGELOG/PROJECT_LOG/Bíblia) só antes de commit
+alwaysApply: true
+---
+
+# Docs só na preparação do commit
+
+Não atualize `docs/CHANGELOG.md`, `docs/PROJECT_LOG.md` nem checklists/marcações de “feito” na Bíblia a cada pedido do usuário.
+
+Faça isso **apenas**:
+- quando o usuário pedir commits / comandos GitHub / changelog; ou
+- quando ele pedir explicitamente para documentar o estado.
+
+Motivo: entre um commit e outro o código pode mudar muitas vezes; logs prematuros poluem o histórico.

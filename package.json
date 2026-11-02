@@ -1,0 +1,10 @@
+{
+  "name": "nihil",
+  "private": true,
+  "description": "Nihil monorepo orchestration (backend Spring Boot + frontend Angular)",
+  "scripts": {
+    "dev": "scripts\\dev.cmd",
+    "setup": "scripts\\setup.cmd",
+    "stop": "scripts\\stop.cmd"
+  }
+}

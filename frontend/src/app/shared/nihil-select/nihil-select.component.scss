@@ -1,0 +1,128 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.nihil-select {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.nihil-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--nihil-radius-sm);
+  background: var(--nihil-surface);
+  color: var(--nihil-text);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nihil-select--form .nihil-select__trigger {
+  border-color: rgba(48, 45, 80, 0.12);
+}
+
+.nihil-select.is-open .nihil-select__trigger,
+.nihil-select__trigger:focus-visible {
+  outline: none;
+  border-color: rgba(103, 41, 242, 0.35);
+  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+}
+
+.nihil-select__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nihil-select__chevron {
+  flex-shrink: 0;
+  color: var(--nihil-muted);
+  display: block;
+  transition: transform 0.15s ease;
+}
+
+.nihil-select.is-open .nihil-select__chevron {
+  transform: rotate(180deg);
+  color: var(--nihil-purple);
+}
+
+.nihil-select__menu {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border-radius: var(--nihil-radius-md);
+  background: var(--nihil-white);
+  border: 1px solid rgba(48, 45, 80, 0.06);
+  box-shadow: 0 16px 36px rgba(48, 45, 80, 0.16);
+  max-height: 260px;
+  overflow: auto;
+}
+
+.nihil-select__option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--nihil-radius-sm);
+  background: transparent;
+  color: var(--nihil-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nihil-select__option:hover {
+  background: var(--nihil-surface);
+}
+
+.nihil-select__option.is-active {
+  background: rgba(103, 41, 242, 0.1);
+  color: var(--nihil-purple);
+}
+
+.nihil-select__option:focus-visible {
+  outline: 2px solid var(--nihil-purple);
+  outline-offset: 2px;
+}
+
+/* Filter bar: trigger chrome lives on the outer .field wrapper */
+.nihil-select--field .nihil-select__trigger {
+  min-height: auto;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.nihil-select--field.is-open .nihil-select__trigger,
+.nihil-select--field .nihil-select__trigger:focus-visible {
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}

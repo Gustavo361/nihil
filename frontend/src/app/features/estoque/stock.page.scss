@@ -166,7 +166,13 @@
   background: var(--nihil-surface);
   color: var(--nihil-muted);
   border: 1px solid transparent;
+  position: relative;
+  z-index: 1;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field:has(app-nihil-select .is-open) {
+  z-index: 5;
 }
 
 .field:focus-within {

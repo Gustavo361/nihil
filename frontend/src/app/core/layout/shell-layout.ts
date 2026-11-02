@@ -14,6 +14,7 @@ import {
   type TablerIcon,
 } from '@tabler/icons-angular';
 import { filter, map, startWith } from 'rxjs';
+import { ToastHostComponent } from '../toast/toast-host.component';
 import { AppSidebar } from './app-sidebar';
 import { NIHIL_NAV_GROUPS } from './nav.config';
 
@@ -21,7 +22,7 @@ type HeaderMenu = 'notifications' | 'theme' | null;
 
 @Component({
   selector: 'app-shell-layout',
-  imports: [RouterOutlet, AppSidebar, TablerIconComponent],
+  imports: [RouterOutlet, AppSidebar, TablerIconComponent, ToastHostComponent],
   templateUrl: './shell-layout.html',
   styleUrl: './shell-layout.scss',
 })

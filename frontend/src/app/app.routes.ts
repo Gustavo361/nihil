@@ -3,6 +3,7 @@ import { ShellLayout } from './core/layout/shell-layout';
 import { StockPage } from './features/estoque/stock.page';
 import { HomePage } from './features/home/home.page';
 import { ComingSoonPage } from './shared/coming-soon/coming-soon.page';
+import { SalesPage } from './features/vendas/sales.page';
 
 const comingSoon = (title: string) => ({
   component: ComingSoonPage,
@@ -15,7 +16,7 @@ export const routes: Routes = [
     component: ShellLayout,
     children: [
       { path: '', component: HomePage },
-      { path: 'vendas', ...comingSoon('Vendas') },
+      { path: 'vendas', component: SalesPage },
       { path: 'pratos-receitas', ...comingSoon('Pratos e receitas') },
       { path: 'estoque', component: StockPage },
       { path: 'compras', ...comingSoon('Compras') },

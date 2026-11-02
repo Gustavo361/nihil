@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IconAlertTriangle,
@@ -19,6 +19,8 @@ import {
   IconX,
   TablerIconComponent,
 } from '@tabler/icons-angular';
+import { ToastService } from '../../core/toast/toast.service';
+import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
 import { STOCK_CATEGORIES, STOCK_ITEMS_MOCK, STOCK_MOVEMENTS_MOCK, STOCK_UNITS } from './stock.mock';
 import { StockItem, StockMovement, StockMovementType, StockStatus } from './stock.models';
 
@@ -28,11 +30,20 @@ type MovementStep = 'movement' | 'create-item';
 
 @Component({
   selector: 'app-stock-page',
-  imports: [FormsModule, CurrencyPipe, DatePipe, DecimalPipe, TablerIconComponent],
+  imports: [
+    FormsModule,
+    CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
+    TablerIconComponent,
+    NihilSelectComponent,
+  ],
   templateUrl: './stock.page.html',
   styleUrl: './stock.page.scss',
 })
 export class StockPage {
+  private readonly toast = inject(ToastService);
+
   readonly pageSize = PAGE_SIZE;
   readonly iconPlus = IconPlus;
   readonly iconSearch = IconSearch;
@@ -52,6 +63,24 @@ export class StockPage {
 
   readonly categories = STOCK_CATEGORIES;
   readonly units = STOCK_UNITS;
+  readonly categoryFilterOptions: NihilSelectOption[] = [
+    { value: '', label: 'Todas as categorias' },
+    ...STOCK_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
+  ];
+  readonly statusFilterOptions: NihilSelectOption[] = [
+    { value: '', label: 'Todas as situações' },
+    { value: 'ok', label: 'Normal' },
+    { value: 'low', label: 'Baixo' },
+    { value: 'out', label: 'Sem estoque' },
+  ];
+  readonly categoryFormOptions: NihilSelectOption[] = STOCK_CATEGORIES.map((cat) => ({
+    value: cat,
+    label: cat,
+  }));
+  readonly unitFormOptions: NihilSelectOption[] = STOCK_UNITS.map((unit) => ({
+    value: unit,
+    label: unit,
+  }));
   readonly items = signal<StockItem[]>([...STOCK_ITEMS_MOCK]);
   readonly movements = signal<StockMovement[]>([...STOCK_MOVEMENTS_MOCK]);
 
@@ -180,8 +209,8 @@ export class StockPage {
     this.page.set(1);
   }
 
-  setStatus(value: '' | StockStatus): void {
-    this.status.set(value);
+  setStatus(value: string): void {
+    this.status.set(value as '' | StockStatus);
     this.page.set(1);
   }
 
@@ -439,6 +468,7 @@ export class StockPage {
     this.movementStep.set('movement');
     this.movementType.set('in');
     this.movementError.set('');
+    this.toast.success(`Item “${name}” cadastrado.`);
   }
 
   submitMovement(): void {
@@ -491,6 +521,11 @@ export class StockPage {
     this.movements.update((list) => [movement, ...list]);
     this.selectedId.set(product.id);
     this.closeMovement();
+    this.toast.success(
+      type === 'in'
+        ? `Entrada de ${qty} ${product.unit} em “${product.name}”.`
+        : `Saída de ${qty} ${product.unit} de “${product.name}”.`,
+    );
   }
 
   statusLabel(status: StockStatus): string {

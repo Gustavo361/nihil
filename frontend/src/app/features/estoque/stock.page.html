@@ -107,25 +107,25 @@
           }
         </label>
 
-        <label class="field">
-          <span class="visually-hidden">Categoria</span>
-          <select [ngModel]="category()" (ngModelChange)="setCategory($event)">
-            <option value="">Todas as categorias</option>
-            @for (cat of categories; track cat) {
-              <option [value]="cat">{{ cat }}</option>
-            }
-          </select>
-        </label>
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Categoria"
+            [value]="category()"
+            [options]="categoryFilterOptions"
+            (valueChange)="setCategory($event)"
+          />
+        </div>
 
-        <label class="field">
-          <span class="visually-hidden">Situação</span>
-          <select [ngModel]="status()" (ngModelChange)="setStatus($event)">
-            <option value="">Todas as situações</option>
-            <option value="ok">Normal</option>
-            <option value="low">Baixo</option>
-            <option value="out">Sem estoque</option>
-          </select>
-        </label>
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Situação"
+            [value]="status()"
+            [options]="statusFilterOptions"
+            (valueChange)="setStatus($event)"
+          />
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -446,31 +446,25 @@
 
           <div class="modal-form__row modal-form__row--2">
             <div class="modal-form__field">
-              <label for="create-category">Categoria</label>
-              <select
-                id="create-category"
-                name="createCategory"
-                [ngModel]="createCategory()"
-                (ngModelChange)="createCategory.set($event)"
-              >
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
-                }
-              </select>
+              <label>Categoria</label>
+              <app-nihil-select
+                appearance="form"
+                ariaLabel="Categoria"
+                [value]="createCategory()"
+                [options]="categoryFormOptions"
+                (valueChange)="createCategory.set($event)"
+              />
             </div>
 
             <div class="modal-form__field">
-              <label for="create-unit">Unidade</label>
-              <select
-                id="create-unit"
-                name="createUnit"
-                [ngModel]="createUnit()"
-                (ngModelChange)="createUnit.set($event)"
-              >
-                @for (unit of units; track unit) {
-                  <option [value]="unit">{{ unit }}</option>
-                }
-              </select>
+              <label>Unidade</label>
+              <app-nihil-select
+                appearance="form"
+                ariaLabel="Unidade"
+                [value]="createUnit()"
+                [options]="unitFormOptions"
+                (valueChange)="createUnit.set($event)"
+              />
             </div>
           </div>
 

@@ -1,0 +1,516 @@
+<section class="sales">
+  <div class="sales__toolbar">
+    <div>
+      <p class="sales__eyebrow">Operação</p>
+      <h1 class="visually-hidden">Vendas</h1>
+      <p class="sales__lead">
+        Registre buffet livre, marmita por kg e pratos prontos no balcão — sem delivery nem mesas.
+      </p>
+    </div>
+    <div class="sales__toolbar-actions">
+      <label class="period-field">
+        <span>Período</span>
+        <input type="date" [ngModel]="period()" (ngModelChange)="setPeriod($event)" />
+      </label>
+      <button type="button" class="sales__cta" (click)="openWizard()">
+        <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+        Nova venda
+      </button>
+    </div>
+  </div>
+
+  <div class="sales__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconCart" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Vendas do dia</p>
+      <p class="kpi__value">{{ dayIndicators().count }}</p>
+      <div class="kpi__footer">
+        <span>Confirmadas no dia selecionado</span>
+      </div>
+    </article>
+
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconMoney" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Faturamento do dia</p>
+      <p class="kpi__value">{{ dayIndicators().revenue | currency: 'BRL' }}</p>
+      <div class="kpi__footer">
+        <span>Confirmadas − canceladas fora do total</span>
+      </div>
+    </article>
+
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconTicket" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Ticket médio</p>
+      <p class="kpi__value">
+        @if (dayIndicators().count === 0) {
+          —
+        } @else {
+          {{ dayIndicators().ticket | currency: 'BRL' }}
+        }
+      </p>
+      <div class="kpi__footer">
+        <span>Faturamento ÷ vendas válidas</span>
+      </div>
+    </article>
+  </div>
+
+  <div class="sales__grid" [class.sales__grid--detail]="selectedSale()">
+    <section class="panel">
+      <div class="panel__filters">
+        <label class="field field--search">
+          <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar por id, resumo ou pagamento"
+            [ngModel]="search()"
+            (ngModelChange)="setSearch($event)"
+          />
+          @if (search().trim()) {
+            <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch(); $event.preventDefault()">
+              <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+            </button>
+          }
+        </label>
+
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Modalidade"
+            [value]="modalityFilter()"
+            [options]="modalityFilterOptions"
+            (valueChange)="setModalityFilter($event)"
+          />
+        </div>
+
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Situação"
+            [value]="statusFilter()"
+            [options]="statusFilterOptions"
+            (valueChange)="setStatusFilter($event)"
+          />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Data / hora</th>
+              <th>Modalidade</th>
+              <th>Resumo</th>
+              <th>Total</th>
+              <th>Pagamento</th>
+              <th>Situação</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sale of pagedSales(); track sale.id) {
+              <tr
+                [class.table__row--active]="selectedId() === sale.id"
+                (click)="selectSale(sale)"
+              >
+                <td><strong>{{ sale.id }}</strong></td>
+                <td>{{ sale.at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ modalityLabel(sale.modality) }}</td>
+                <td class="table__clip">{{ sale.summary }}</td>
+                <td>{{ sale.total | currency: 'BRL' }}</td>
+                <td>{{ paymentLabel(sale.payment) }}</td>
+                <td>
+                  <span class="badge" [attr.data-status]="sale.status">
+                    {{ statusLabel(sale.status) }}
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="link-btn" (click)="selectSale(sale); $event.stopPropagation()">
+                    Ver
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="table__empty">
+                  <div class="empty">
+                    <tabler-icon [icon]="iconReceipt" [size]="28" [stroke]="1.5" aria-hidden="true" />
+                    <p>Nenhuma venda neste período/filtros.</p>
+                    <button type="button" class="sales__cta" (click)="openWizard()">
+                      <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+                      Registrar a primeira venda
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <p class="pager__summary">
+          @if (pageSummary().total === 0) {
+            Nenhum registro
+          } @else {
+            {{ pageSummary().from }}–{{ pageSummary().to }} de {{ pageSummary().total }}
+          }
+        </p>
+        <div class="pager__controls">
+          <button type="button" class="pager__btn" (click)="previousPage()" [disabled]="currentPage() <= 1" aria-label="Página anterior">
+            <tabler-icon [icon]="iconPrev" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          </button>
+          <span class="pager__page">Página {{ currentPage() }} / {{ totalPages() }}</span>
+          <button type="button" class="pager__btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()" aria-label="Próxima página">
+            <tabler-icon [icon]="iconNext" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      <p class="panel__note">
+        Sem API de vendas ainda: indicadores e histórico usam apenas registros desta sessão no navegador.
+        Cancelamento local não reverte financeiro nem estoque. Buffet e marmita não baixam insumos automaticamente.
+        Pratos prontos dependem do cadastro de cardápio (ainda inexistente).
+      </p>
+    </section>
+
+    @if (selectedSale(); as sale) {
+      <aside class="detail" aria-label="Detalhes da venda">
+        <div class="detail__head">
+          <div>
+            <p class="detail__eyebrow">Detalhes</p>
+            <h2>{{ sale.id }}</h2>
+            <p class="detail__meta">{{ sale.at | date: 'dd/MM/yyyy HH:mm' }} · {{ modalityLabel(sale.modality) }}</p>
+          </div>
+          <button type="button" class="icon-btn" (click)="clearSelection()" aria-label="Fechar detalhes">
+            <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+          </button>
+        </div>
+
+        <div class="detail__stats">
+          <div>
+            <span>Total</span>
+            <strong>{{ sale.total | currency: 'BRL' }}</strong>
+          </div>
+          <div>
+            <span>Pagamento</span>
+            <strong>{{ paymentLabel(sale.payment) }}</strong>
+          </div>
+          <div>
+            <span>Situação</span>
+            <strong>
+              <span class="badge" [attr.data-status]="sale.status">{{ statusLabel(sale.status) }}</span>
+            </strong>
+          </div>
+        </div>
+
+        <h3>Resumo</h3>
+        <p class="detail__summary">{{ sale.summary }}</p>
+
+        @if (sale.lines?.length) {
+          <ul class="lines">
+            @for (line of sale.lines; track line.dishId) {
+              <li>
+                <span>{{ line.quantity }}× {{ line.dishName }}</span>
+                <strong>{{ line.unitPrice * line.quantity | currency: 'BRL' }}</strong>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (sale.cancellation; as cancel) {
+          <div class="cancel-box">
+            <h3>Cancelamento</h3>
+            <p>{{ cancel.reason }}</p>
+            <span>{{ cancel.at | date: 'dd/MM/yyyy HH:mm' }} · {{ cancel.user }}</span>
+          </div>
+        }
+
+        @if (sale.status === 'confirmed') {
+          <button type="button" class="ghost-btn ghost-btn--danger" (click)="openCancel()">
+            Solicitar cancelamento
+          </button>
+          <p class="detail__hint">
+            Venda confirmada não pode ser editada. O cancelamento nesta UI só marca o registro localmente.
+          </p>
+        }
+      </aside>
+    }
+  </div>
+</section>
+
+@if (wizardOpen()) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sale-wizard-title">
+    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeWizard()"></button>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="sale-wizard-title" class="modal__title">
+          <tabler-icon [icon]="iconPlus" [size]="20" [stroke]="2" aria-hidden="true" />
+          Nova venda
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeWizard()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+        </button>
+      </div>
+
+      @if (wizardStep() === 'modality') {
+        <p class="modal__lead">Escolha a modalidade da venda.</p>
+        <div class="modality-grid">
+          <button type="button" class="modality-card" (click)="chooseModality('buffet')">
+            <strong>Buffet livre</strong>
+            <span>Preço fixo por pessoa</span>
+          </button>
+          <button type="button" class="modality-card" (click)="chooseModality('kg')">
+            <strong>Marmita por kg</strong>
+            <span>Peso × preço por kg</span>
+          </button>
+          <button type="button" class="modality-card" (click)="chooseModality('dishes')">
+            <strong>Pratos prontos</strong>
+            <span>À la minuta e itens do cardápio</span>
+          </button>
+        </div>
+      }
+
+      @if (wizardStep() === 'details') {
+        <p class="modal__lead">{{ modalityLabel(modality()!) }} — preencha os dados.</p>
+
+        @if (modality() === 'buffet') {
+          <form class="modal-form" (ngSubmit)="goToPayment()">
+            <div class="modal-form__row modal-form__row--2">
+              <div class="modal-form__field">
+                <label for="buffet-people">Quantidade de pessoas</label>
+                <input
+                  id="buffet-people"
+                  type="text"
+                  inputmode="numeric"
+                  [ngModel]="peopleCountText()"
+                  (ngModelChange)="onPeopleCountInput($event)"
+                  (keydown)="blockNonDigitKey($event)"
+                  name="peopleCount"
+                  placeholder="0"
+                />
+              </div>
+              <div class="modal-form__field">
+                <label for="buffet-price">Preço por pessoa</label>
+                <div class="money-field">
+                  <span aria-hidden="true">R$</span>
+                  <input
+                    id="buffet-price"
+                    type="text"
+                    inputmode="numeric"
+                    [ngModel]="buffetPriceText()"
+                    (ngModelChange)="onBuffetPriceInput($event)"
+                    (keydown)="blockNonDigitKey($event)"
+                    name="buffetPrice"
+                    placeholder="0,00"
+                  />
+                </div>
+                <p class="modal-form__hint">Ainda sem tabela de preços no sistema — valor informado nesta venda.</p>
+              </div>
+            </div>
+            <p class="draft-total">Total: <strong>{{ draftTotal() | currency: 'BRL' }}</strong></p>
+            @if (formError()) {
+              <p class="modal-form__error" role="alert">{{ formError() }}</p>
+            }
+            <div class="modal-form__actions">
+              <button type="submit" class="sales__cta">Continuar</button>
+              <button type="button" class="ghost-btn" (click)="backToModality()">Voltar</button>
+            </div>
+          </form>
+        }
+
+        @if (modality() === 'kg') {
+          <form class="modal-form" (ngSubmit)="goToPayment()">
+            <div class="modal-form__row modal-form__row--2">
+              <div class="modal-form__field">
+                <label for="kg-weight">Peso (kg)</label>
+                <input
+                  id="kg-weight"
+                  type="text"
+                  inputmode="decimal"
+                  [ngModel]="weightText()"
+                  (ngModelChange)="onWeightInput($event)"
+                  name="weightKg"
+                  placeholder="0,000"
+                />
+              </div>
+              <div class="modal-form__field">
+                <label for="kg-price">Preço por kg</label>
+                <div class="money-field">
+                  <span aria-hidden="true">R$</span>
+                  <input
+                    id="kg-price"
+                    type="text"
+                    inputmode="numeric"
+                    [ngModel]="kgPriceText()"
+                    (ngModelChange)="onKgPriceInput($event)"
+                    (keydown)="blockNonDigitKey($event)"
+                    name="kgPrice"
+                    placeholder="0,00"
+                  />
+                </div>
+                <p class="modal-form__hint">Ainda sem tabela de preços no sistema — valor informado nesta venda.</p>
+              </div>
+            </div>
+            <p class="draft-total">Total: <strong>{{ draftTotal() | currency: 'BRL' }}</strong></p>
+            @if (formError()) {
+              <p class="modal-form__error" role="alert">{{ formError() }}</p>
+            }
+            <div class="modal-form__actions">
+              <button type="submit" class="sales__cta">Continuar</button>
+              <button type="button" class="ghost-btn" (click)="backToModality()">Voltar</button>
+            </div>
+          </form>
+        }
+
+        @if (modality() === 'dishes') {
+          <form class="modal-form" (ngSubmit)="goToPayment()">
+            <div class="modal-form__field modal-form__field--suggest">
+              <label for="dish-search">Pratos</label>
+              <div class="suggest" #dishSuggestAnchor>
+                <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+                <input
+                  id="dish-search"
+                  type="search"
+                  autocomplete="off"
+                  placeholder="Buscar no cardápio"
+                  [ngModel]="dishQuery()"
+                  (ngModelChange)="onDishQueryChange($event)"
+                  (focus)="openDishList()"
+                  (blur)="closeDishListSoon()"
+                  name="dishQuery"
+                  [disabled]="dishes().length === 0"
+                />
+              </div>
+
+              @if (dishes().length === 0) {
+                <div class="suggest__empty">
+                  <p>Nenhum prato no catálogo mockado.</p>
+                </div>
+              } @else if (dishListOpen() && dishSuggestions().length > 0 && dishSuggestPanel(); as panel) {
+                <ul
+                  class="suggest__list suggest__list--floating"
+                  role="listbox"
+                  [style.top.px]="panel.top"
+                  [style.left.px]="panel.left"
+                  [style.width.px]="panel.width"
+                  [style.maxHeight.px]="panel.maxHeight"
+                >
+                  @for (dish of dishSuggestions(); track dish.id) {
+                    <li>
+                      <button type="button" (mousedown)="addDish(dish)">
+                        <strong>{{ dish.name }}</strong>
+                        <span>{{ dish.unitPrice | currency: 'BRL' }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            @if (cart().length) {
+              <ul class="cart">
+                @for (line of cart(); track line.dishId) {
+                  <li>
+                    <div class="cart__info">
+                      <strong>{{ line.dishName }}</strong>
+                      <span>{{ line.unitPrice | currency: 'BRL' }} · un.</span>
+                    </div>
+                    <div class="cart__qty">
+                      <button type="button" (click)="bumpDishQty(line.dishId, -1)" aria-label="Diminuir">−</button>
+                      <span class="cart__qty-value">{{ line.quantity }}</span>
+                      <button type="button" (click)="bumpDishQty(line.dishId, 1)" aria-label="Aumentar">+</button>
+                    </div>
+                    <strong class="cart__total">{{ line.unitPrice * line.quantity | currency: 'BRL' }}</strong>
+                    <button type="button" class="link-btn cart__remove" (click)="removeDish(line.dishId)">
+                      Remover
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            <p class="draft-total">Total: <strong>{{ draftTotal() | currency: 'BRL' }}</strong></p>
+            @if (formError()) {
+              <p class="modal-form__error" role="alert">{{ formError() }}</p>
+            }
+            <div class="modal-form__actions">
+              <button type="submit" class="sales__cta" [disabled]="dishes().length === 0">Continuar</button>
+              <button type="button" class="ghost-btn" (click)="backToModality()">Voltar</button>
+            </div>
+          </form>
+        }
+      }
+
+      @if (wizardStep() === 'payment') {
+        <p class="modal__lead">Resumo e forma de pagamento.</p>
+        <div class="summary-box">
+          <p><span>Modalidade</span><strong>{{ modalityLabel(modality()!) }}</strong></p>
+          <p><span>Resumo</span><strong>{{ draftSummary() }}</strong></p>
+          <p><span>Total</span><strong>{{ draftTotal() | currency: 'BRL' }}</strong></p>
+        </div>
+
+        <fieldset class="pay-grid">
+          <legend>Pagamento</legend>
+          <label [class.is-active]="payment() === 'cash'">
+            <input type="radio" name="payment" value="cash" [ngModel]="payment()" (ngModelChange)="setPayment($event)" />
+            Dinheiro
+          </label>
+          <label [class.is-active]="payment() === 'pix'">
+            <input type="radio" name="payment" value="pix" [ngModel]="payment()" (ngModelChange)="setPayment($event)" />
+            Pix
+          </label>
+          <label [class.is-active]="payment() === 'debit'">
+            <input type="radio" name="payment" value="debit" [ngModel]="payment()" (ngModelChange)="setPayment($event)" />
+            Débito
+          </label>
+          <label [class.is-active]="payment() === 'credit'">
+            <input type="radio" name="payment" value="credit" [ngModel]="payment()" (ngModelChange)="setPayment($event)" />
+            Crédito
+          </label>
+        </fieldset>
+
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal-form__actions">
+          <button type="button" class="sales__cta" (click)="confirmSale()" [disabled]="saving()">
+            {{ saving() ? 'Salvando…' : 'Confirmar venda' }}
+          </button>
+          <button type="button" class="ghost-btn" (click)="backToDetails()" [disabled]="saving()">Voltar</button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (cancelOpen()) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeCancel()"></button>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="cancel-title">Cancelar venda</h2>
+        <button type="button" class="icon-btn" (click)="closeCancel()" aria-label="Fechar">
+          <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Justifique o cancelamento. O registro original permanece; efeitos financeiros/estoque só serão tratados quando a API existir.
+      </p>
+      <form class="modal-form" (ngSubmit)="confirmCancel()">
+        <div class="modal-form__field">
+          <label for="cancel-reason">Justificativa</label>
+          <input id="cancel-reason" type="text" name="cancelReason" [ngModel]="cancelReason()" (ngModelChange)="cancelReason.set($event)" required />
+        </div>
+        @if (cancelError()) {
+          <p class="modal-form__error" role="alert">{{ cancelError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="sales__cta sales__cta--danger">Confirmar cancelamento</button>
+          <button type="button" class="ghost-btn" (click)="closeCancel()">Voltar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

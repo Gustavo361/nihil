@@ -32,10 +32,3 @@ export interface Sale {
   lines?: SaleDishLine[];
   cancellation?: SaleCancellation;
 }
-
-/** Catalog entry when menu API exists. Empty until dishes are persisted. */
-export interface MenuDish {
-  id: string;
-  name: string;
-  unitPrice: number;
-}

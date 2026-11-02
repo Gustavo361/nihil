@@ -1,20 +1,9 @@
-import { MenuDish, Sale } from './sales.models';
+import { Sale } from './sales.models';
 
-/** UI-only sample data until sales/menu API exists. Not business source of truth. */
+/** UI-only sample data until sales API exists. Not business source of truth. */
 
 export const DEFAULT_BUFFET_PRICE = 49.9;
 export const DEFAULT_KG_PRICE = 69.9;
-
-export const MENU_DISHES_MOCK: MenuDish[] = [
-  { id: 'd1', name: 'À la minuta bife', unitPrice: 28.9 },
-  { id: 'd2', name: 'À la minuta frango', unitPrice: 24.9 },
-  { id: 'd3', name: 'Filé de peixe grelhado', unitPrice: 32.5 },
-  { id: 'd4', name: 'Strogonoff de frango', unitPrice: 27.0 },
-  { id: 'd5', name: 'Feijoada (prato)', unitPrice: 35.0 },
-  { id: 'd6', name: 'Executivo carne', unitPrice: 26.5 },
-  { id: 'd7', name: 'Executivo vegetariano', unitPrice: 22.0 },
-  { id: 'd8', name: 'Salada completa', unitPrice: 18.5 },
-];
 
 function atToday(hours: number, minutes: number): string {
   const d = new Date();

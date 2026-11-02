@@ -4,6 +4,8 @@ import { StockPage } from './features/estoque/stock.page';
 import { HomePage } from './features/home/home.page';
 import { ComingSoonPage } from './shared/coming-soon/coming-soon.page';
 import { CashPage } from './features/caixa/cash.page';
+import { PurchasesPage } from './features/compras/purchases.page';
+import { MenuPage } from './features/pratos-receitas/menu.page';
 import { SalesPage } from './features/vendas/sales.page';
 
 const comingSoon = (title: string) => ({
@@ -18,9 +20,9 @@ export const routes: Routes = [
     children: [
       { path: '', component: HomePage },
       { path: 'vendas', component: SalesPage },
-      { path: 'pratos-receitas', ...comingSoon('Pratos e receitas') },
+      { path: 'pratos-receitas', component: MenuPage },
       { path: 'estoque', component: StockPage },
-      { path: 'compras', ...comingSoon('Compras') },
+      { path: 'compras', component: PurchasesPage },
       { path: 'fornecedores', ...comingSoon('Fornecedores') },
       { path: 'caixa', component: CashPage },
       { path: 'despesas', ...comingSoon('Despesas') },

@@ -181,9 +181,10 @@
       </div>
 
       <p class="panel__note">
-        Sem API de vendas ainda: indicadores e histórico usam apenas registros desta sessão no navegador.
-        Cancelamento local não reverte financeiro nem estoque. Buffet e marmita não baixam insumos automaticamente.
-        Pratos prontos dependem do cadastro de cardápio (ainda inexistente).
+        Sem API de vendas ainda: histórico desta sessão no navegador. Pratos prontos usam o catálogo de
+        <strong>Pratos e receitas</strong>; com receita, a venda estima baixa no estoque do dia (cancelamento reverte).
+        Buffet e marmita não baixam insumos. Indisponíveis não entram em novas vendas; itens já vendidos preservam
+        nome e preço da época da venda.
       </p>
     </section>
 
@@ -404,7 +405,10 @@
 
               @if (dishes().length === 0) {
                 <div class="suggest__empty">
-                  <p>Nenhum prato no catálogo mockado.</p>
+                  <p>
+                    Nenhum prato disponível. Cadastre em
+                    <strong>Pratos e receitas</strong> e marque como disponível.
+                  </p>
                 </div>
               } @else if (dishListOpen() && dishSuggestions().length > 0 && dishSuggestPanel(); as panel) {
                 <ul

@@ -22,23 +22,15 @@ import {
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { CashRegisterService } from '../../core/cash/cash-register.service';
+import { MenuCatalogService } from '../../core/menu/menu-catalog.service';
+import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
+import type { RecipeSaleLineInput } from '../../core/stock/stock-inventory.service';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
 import type { CashPaymentMethod } from '../caixa/cash.models';
-import {
-  DEFAULT_BUFFET_PRICE,
-  DEFAULT_KG_PRICE,
-  MENU_DISHES_MOCK,
-  SALES_MOCK,
-} from './sales.mock';
-import {
-  MenuDish,
-  PaymentMethod,
-  Sale,
-  SaleDishLine,
-  SaleModality,
-  SaleStatus,
-} from './sales.models';
+import type { SaleMenuDish } from '../pratos-receitas/menu.models';
+import { DEFAULT_BUFFET_PRICE, DEFAULT_KG_PRICE, SALES_MOCK } from './sales.mock';
+import { PaymentMethod, Sale, SaleDishLine, SaleModality, SaleStatus } from './sales.models';
 
 const PAGE_SIZE = 20;
 /** Sales older than this window are hidden from the UI (inclusive of today). */
@@ -55,6 +47,8 @@ type SaleWizardStep = 'modality' | 'details' | 'payment';
 export class SalesPage implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly cashRegister = inject(CashRegisterService);
+  private readonly menuCatalog = inject(MenuCatalogService);
+  private readonly inventory = inject(StockInventoryService);
   private readonly dishSuggestAnchor = viewChild<ElementRef<HTMLElement>>('dishSuggestAnchor');
   private readonly dishSuggestScrollParents: HTMLElement[] = [];
   private readonly onDishSuggestReposition = () => this.syncDishSuggestPanel();
@@ -85,8 +79,8 @@ export class SalesPage implements OnDestroy {
 
   /** UI-only mock until sales API exists. */
   readonly sales = signal<Sale[]>([...SALES_MOCK]);
-  /** UI-only mock until menu API exists. */
-  readonly dishes = signal<MenuDish[]>([...MENU_DISHES_MOCK]);
+  /** Shared with Pratos e receitas — only available dishes. */
+  readonly dishes = this.menuCatalog.availableForSale;
 
   readonly search = signal('');
   readonly modalityFilter = signal<'' | SaleModality>('');
@@ -399,7 +393,7 @@ export class SalesPage implements OnDestroy {
     window.setTimeout(() => this.closeDishList(), 150);
   }
 
-  addDish(dish: MenuDish): void {
+  addDish(dish: SaleMenuDish): void {
     this.cart.update((lines) => {
       const existing = lines.find((l) => l.dishId === dish.id);
       if (existing) {
@@ -407,6 +401,7 @@ export class SalesPage implements OnDestroy {
           l.dishId === dish.id ? { ...l, quantity: l.quantity + 1 } : l,
         );
       }
+      // Snapshot name/price at add time — later catalog edits must not rewrite sale lines.
       return [
         ...lines,
         { dishId: dish.id, dishName: dish.name, unitPrice: dish.unitPrice, quantity: 1 },
@@ -469,10 +464,15 @@ export class SalesPage implements OnDestroy {
       lines: mod === 'dishes' ? this.cart().map((l) => ({ ...l })) : undefined,
     };
 
-    // Session-only until sales API exists — stock side effects still pending.
+    // Session-only until sales API exists.
     this.sales.update((list) => [sale, ...list]);
     this.selectedId.set(sale.id);
     this.period.set(this.todayInputValue());
+
+    if (mod === 'dishes' && sale.lines?.length) {
+      this.applyDishStockOut(sale.id, sale.lines, sale.at);
+    }
+
     this.saving.set(false);
     this.closeWizard();
 
@@ -531,14 +531,42 @@ export class SalesPage implements OnDestroy {
       ),
     );
 
+    const stockReversed = this.inventory.reverseSaleOut(sale.id);
     const reverse = this.cashRegister.reverseSaleReceipt(sale.id, reason);
     this.closeCancel();
     if (reverse === 'reversed') {
-      this.toast.info(`Venda ${sale.id} cancelada e estornada no caixa.`);
+      this.toast.info(
+        stockReversed
+          ? `Venda ${sale.id} cancelada — estorno no caixa e nas baixas de estoque.`
+          : `Venda ${sale.id} cancelada e estornada no caixa.`,
+      );
     } else if (reverse === 'removed_pending') {
       this.toast.info(`Venda ${sale.id} cancelada — removida da fila do caixa.`);
     } else {
-      this.toast.info(`Venda ${sale.id} cancelada.`);
+      this.toast.info(
+        stockReversed
+          ? `Venda ${sale.id} cancelada — baixas de estoque revertidas.`
+          : `Venda ${sale.id} cancelada.`,
+      );
+    }
+  }
+
+  private applyDishStockOut(saleId: string, lines: SaleDishLine[], at: string): void {
+    const recipeLines: RecipeSaleLineInput[] = [];
+    for (const line of lines) {
+      const dish = this.menuCatalog.findById(line.dishId);
+      if (!dish?.recipe?.length) continue;
+      for (const ing of dish.recipe) {
+        recipeLines.push({
+          stockItemId: ing.stockItemId,
+          qtyValue: ing.qtyValue,
+          qtyUnit: ing.qtyUnit,
+          portions: line.quantity,
+        });
+      }
+    }
+    if (recipeLines.length) {
+      this.inventory.applyRecipeSaleOut(saleId, recipeLines, at);
     }
   }
 

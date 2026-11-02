@@ -10,6 +10,9 @@ Atualizar este arquivo **na preparação para commit** (ou quando o responsável
 
 ### Added
 
+- UI `/pratos-receitas`: cadastro de pratos, receita em g/kg, custo estimado; catálogo compartilhado com Vendas (só disponíveis com ingredientes); localStorage.
+- UI `/compras`: cadastro/entrada de produtos no estoque (peso de pacote quando necessário); produtos nascem só em Compras.
+- Estoque por dia: início, entradas, saídas estimadas, conferência física; baixa estimada de vendas de pratos com receita (cancelamento reverte).
 - UI/UX do módulo Estoque (mock local, sem API): listagem, filtros, paginação, KPIs, detalhe com histórico e modal de movimentação com cadastro rápido de item.
 - Menus do header (notificações e modo claro/escuro) com dropdown e seta.
 - Locale `pt-BR` no frontend para formatação monetária.

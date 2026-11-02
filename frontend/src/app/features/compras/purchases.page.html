@@ -1,0 +1,249 @@
+<section class="purchases">
+  <div class="purchases__toolbar">
+    <div>
+      <p class="purchases__eyebrow">Operação</p>
+      <h1 class="visually-hidden">Compras</h1>
+      <p class="purchases__lead">
+        Cadastre produtos e registre entradas no estoque. Os insumos nascem aqui e alimentam
+        Estoque, Pratos e Vendas.
+      </p>
+    </div>
+    <button type="button" class="purchases__cta" (click)="openCreate()">
+      <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+      Nova compra
+    </button>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Dados ficam no <strong>navegador (localStorage)</strong> até existir API de compras.
+      Produtos não são inventados — só o que você receber aqui entra no estoque.
+    </p>
+  </div>
+
+  <div class="purchases__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconCart" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Compras registradas</p>
+      <p class="kpi__value">{{ purchaseCount() }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconPackage" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Produtos no estoque</p>
+      <p class="kpi__value">{{ productCount() }}</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Total das compras (sessão)</p>
+      <p class="kpi__value kpi__value--money">{{ totalSpent() | currency: 'BRL' }}</p>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="panel__filters">
+      <label class="field field--search">
+        <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+        <input
+          type="search"
+          placeholder="Buscar compra ou produto"
+          [ngModel]="search()"
+          (ngModelChange)="setSearch($event)"
+        />
+        @if (search().trim()) {
+          <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch()">
+            <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+          </button>
+        }
+      </label>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Compra</th>
+            <th>Quando</th>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Custo un.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filtered(); track trackPurchase($index, p)) {
+            <tr>
+              <td><strong>{{ p.id }}</strong></td>
+              <td>{{ p.at | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                {{ p.line.name }}
+                @if (p.line.createdItem) {
+                  <span class="table__sub">Novo produto</span>
+                }
+              </td>
+              <td>{{ p.line.quantity }} {{ p.line.unit }}</td>
+              <td>{{ p.line.unitCost | currency: 'BRL' }}</td>
+              <td>{{ p.totalCost | currency: 'BRL' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="table__empty">
+                <div class="empty">
+                  <p>Nenhuma compra registrada.</p>
+                  <button type="button" class="purchases__cta" (click)="openCreate()">
+                    Registrar primeira compra
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (modalOpen()) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="purchase-title">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="purchase-title" class="modal__title">Nova compra / entrada</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Informe o produto recebido. Se o nome já existir, só a quantidade entra no estoque do dia.
+      </p>
+
+      <form class="modal-form" (ngSubmit)="save()">
+        <div class="modal-form__field">
+          <label for="purchase-name">Nome do produto</label>
+          <input
+            id="purchase-name"
+            type="text"
+            required
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="purchaseName"
+            placeholder="Ex.: Arroz tipo 1"
+          />
+          @if (existingHint(); as existing) {
+            <p class="modal-form__hint">
+              Já cadastrado ({{ existing.quantity }} {{ existing.unit }} · un. {{ existing.unit }}).
+              Nova entrada usará a mesma unidade.
+            </p>
+          }
+        </div>
+
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label>Categoria</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Categoria"
+              [value]="category()"
+              [options]="categoryOptions"
+              (valueChange)="setCategory($event)"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Unidade de estoque</label>
+            @if (existingHint(); as existing) {
+              <input type="text" [value]="existing.unit" readonly />
+            } @else {
+              <app-nihil-select
+                appearance="form"
+                ariaLabel="Unidade"
+                [value]="unit()"
+                [options]="unitOptions"
+                (valueChange)="setUnit($event)"
+              />
+            }
+          </div>
+        </div>
+
+        @if (needsPackageWeight()) {
+          <div class="modal-form__field">
+            <label for="purchase-weight">Peso líquido do pacote (kg)</label>
+            <input
+              id="purchase-weight"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="packageWeightText()"
+              (ngModelChange)="onPackageWeightInput($event)"
+              name="packageWeight"
+              placeholder="Ex.: 1"
+            />
+            <p class="modal-form__hint">
+              Necessário para receitas em gramas (ex.: 1 un = 1 kg → 100 g = 0,1 un).
+            </p>
+          </div>
+        }
+
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="purchase-qty">Quantidade recebida</label>
+            <input
+              id="purchase-qty"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="quantityText()"
+              (ngModelChange)="onQtyInput($event)"
+              name="purchaseQty"
+              placeholder="0"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label for="purchase-cost">Custo unitário</label>
+            <div class="money-field">
+              <span aria-hidden="true">R$</span>
+              <input
+                id="purchase-cost"
+                type="text"
+                inputmode="numeric"
+                [ngModel]="unitCostText()"
+                (ngModelChange)="onMoneyInput($event)"
+                name="purchaseCost"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-form__field">
+          <label for="purchase-min">Estoque mínimo (alerta)</label>
+          <input
+            id="purchase-min"
+            type="text"
+            inputmode="decimal"
+            [ngModel]="minQtyText()"
+            (ngModelChange)="onMinQtyInput($event)"
+            name="purchaseMin"
+          />
+        </div>
+
+        <div class="modal-form__field">
+          <label for="purchase-note">Observação (opcional)</label>
+          <input
+            id="purchase-note"
+            type="text"
+            [ngModel]="note()"
+            (ngModelChange)="note.set($event)"
+            name="purchaseNote"
+          />
+        </div>
+
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal-form__actions">
+          <button type="submit" class="purchases__cta" [disabled]="saving()">Salvar entrada</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

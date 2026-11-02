@@ -500,6 +500,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 - [x] Atalhos na raiz (`dev` / `setup` / `stop`) e `package.json` com `pnpm dev`.
 - [x] Banner Spring Boot (`banner.txt`) + saída enxuta do `dev` (portas juntas quando prontas).
 - [x] Shell layout + sidebar; UI mock de Estoque (listagem/modal/movimentação) sem API.
+- [x] UI Pratos e receitas + Compras + estoque diário; catálogo compartilhado com Vendas (localStorage, sem API).
 - [ ] CI básica configurada no GitHub.
 - [ ] Backups e procedimento de restauração documentados e testados.
 - [ ] Repositório GitHub remoto / push — fora do escopo desta etapa (sem commit/push).
@@ -508,6 +509,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 
 | Data | Área/funcionalidade | Validação | Comando ou cenário | Resultado/evidência |
 |---|---|---|---|---|
+| 2026-11-02 | Frontend build (pratos/compras/estoque) | Teste automático | `pnpm exec ng build --configuration=development` | exit 0 |
 | 2026-11-02 | Backend package | Teste automático | `./mvnw.cmd -DskipTests package` | BUILD SUCCESS; jar gerado |
 | 2026-11-02 | Backend tests | Teste automático | `./mvnw.cmd test` | Tests run: 2, Failures: 0, Errors: 0 (contextLoads + health); revalidado após banner |
 | 2026-11-02 | Backend smoke start | Teste manual (IA) | `spring-boot:run` / `dev` perfil `smoke` | `GET /actuator/health` → `{"status":"UP"}` |
@@ -518,9 +520,9 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 
 ### 14.3 Próxima tarefa
 
-- **Próxima tarefa:** requisitos do módulo estoque em `docs/requirements/`; depois API de estoque substituindo o mock da UI.
-- **Pré-requisitos:** decisões de regra de negócio de estoque com o responsável; PostgreSQL/`DB_*` quando for persistir.
-- **Critério de conclusão:** requisitos escritos e validados; endpoints de estoque cobrindo o fluxo da UI mock.
+- **Próxima tarefa:** API de cardápio/estoque/compras substituindo localStorage; requisitos em `docs/requirements/` conforme necessário.
+- **Pré-requisitos:** decisões de rendimento/baixa e PostgreSQL/`DB_*` quando for persistir.
+- **Critério de conclusão:** endpoints cobrindo o fluxo das UIs de Compras, Estoque, Pratos e Vendas (pratos).
 
 ---
 

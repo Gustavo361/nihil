@@ -6,6 +6,23 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 
 ---
 
+## 2026-11-02 — Pratos e receitas + cadeia Compras/Estoque/Vendas (UI)
+
+### Progresso
+
+- `/pratos-receitas`: CRUD de pratos, receita g/kg, indisponível sem ingredientes; `MenuCatalogService` (localStorage).
+- Vendas “Pratos prontos” consome o mesmo catálogo; snapshot de preço nas linhas; baixa estimada no estoque quando há receita.
+- `/compras` cria produtos e entradas; estoque diário com conferência; conversão g/kg ↔ unidade de estoque.
+- Sem API backend nesta etapa; dados temporários no navegador.
+
+### Próximos passos
+
+1. API de cardápio/estoque/compras no backend.
+2. Política definitiva de rendimento e baixas.
+3. Fornecedores e vínculo financeiro das compras.
+
+---
+
 ## 2026-11-02 — UI Estoque + header (mock)
 
 ### Progresso

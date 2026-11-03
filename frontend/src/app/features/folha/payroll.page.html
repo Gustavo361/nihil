@@ -1,0 +1,159 @@
+<section class="payroll">
+  <div class="payroll__toolbar">
+    <div>
+      <p class="payroll__eyebrow">Gestão</p>
+      <h1 class="payroll__title">Folha de pagamento</h1>
+      <p class="payroll__lead">
+        Confirme os custos com pessoal do mês. Os totais confirmados alimentam Despesas.
+      </p>
+    </div>
+    <div class="payroll__toolbar-actions">
+      <div class="month-field">
+        <app-nihil-select
+          appearance="form"
+          ariaLabel="Mês da folha"
+          [value]="monthRef()"
+          [options]="monthOptions()"
+          (valueChange)="setMonth($event)"
+        />
+      </div>
+      <button type="button" class="payroll__cta" (click)="openDraft()">
+        <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+        Montar folha do mês
+      </button>
+    </div>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Valores <strong>registrados</strong> para gestão interna (localStorage). Não calcula INSS, FGTS
+      nem verbas oficiais. Cadastre a equipe em
+      <a routerLink="/funcionarios">Funcionários</a>. Em Despesas, salários vêm só daqui — não
+      lance de novo como despesa fixa.
+    </p>
+  </div>
+
+  <div class="payroll__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconWallet" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Funcionários ativos</p>
+      <p class="kpi__value">{{ activeEmployeeCount() }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconCheck" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Folhas confirmadas</p>
+      <p class="kpi__value">{{ confirmedCount() }}</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Total da folha selecionada</p>
+      <p class="kpi__value">
+        {{ selectedRun() ? (selectedRun()!.total | currency: 'BRL') : '—' }}
+      </p>
+    </article>
+  </div>
+
+  @if (formError()) {
+    <p class="banner-error" role="alert">{{ formError() }}</p>
+  }
+
+  <div class="payroll__grid">
+    <section class="panel">
+      <h2 class="panel__title">Histórico</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Total</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (run of runs(); track run.id) {
+              <tr
+                [class.is-selected]="selectedRun()?.id === run.id"
+                (click)="selectRun(run)"
+              >
+                <td>{{ run.periodMonth }}</td>
+                <td>{{ run.total | currency: 'BRL' }}</td>
+                <td>
+                  <span class="badge" [attr.data-status]="run.status">{{ statusLabel(run.status) }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="table__empty">Nenhuma folha ainda.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel__title">Detalhe do mês</h2>
+      @if (selectedRun(); as run) {
+        <p class="panel__hint">
+          {{ run.periodMonth }}
+          @if (run.confirmedAt) {
+            · confirmada em {{ run.confirmedAt | date: 'dd/MM/yyyy HH:mm' }}
+          }
+        </p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Funcionário</th>
+                <th>Cargo</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of run.lines; track line.employeeId) {
+                <tr>
+                  <td>{{ line.employeeName }}</td>
+                  <td>{{ line.role }}</td>
+                  <td>
+                    @if (run.status === 'draft') {
+                      <input
+                        #amt
+                        class="line-input"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="0,00"
+                        [ngModel]="lineDrafts()[line.employeeId] ?? ''"
+                        (ngModelChange)="onLineAmount(line.employeeId, $event, amt)"
+                        (blur)="onLineAmountBlur(line.employeeId)"
+                        [name]="'line_' + line.employeeId"
+                      />
+                    } @else {
+                      {{ line.amount | currency: 'BRL' }}
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="detail-total">
+          Total: <strong>{{ run.total | currency: 'BRL' }}</strong>
+        </p>
+        <div class="detail-actions">
+          @if (run.status === 'draft') {
+            <button type="button" class="payroll__cta" (click)="confirm()" [disabled]="saving()">
+              {{ saving() ? 'Confirmando…' : 'Confirmar folha' }}
+            </button>
+          }
+          @if (run.status !== 'cancelled') {
+            <button type="button" class="ghost-btn ghost-btn--danger" (click)="cancelRun()">
+              Cancelar folha
+            </button>
+          }
+          <a class="ghost-btn" routerLink="/despesas">Ver em Despesas</a>
+        </div>
+      } @else {
+        <p class="panel__hint">Monte a folha do mês selecionado para revisar e confirmar.</p>
+      }
+    </section>
+  </div>
+</section>

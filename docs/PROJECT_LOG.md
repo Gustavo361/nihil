@@ -6,6 +6,67 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 
 ---
 
+## 2026-11-02 — Operação financeira, fornecedores e equipe (UI local)
+
+### Progresso
+
+- `/fornecedores`: cadastro, agenda de entregas e lembretes no cabeçalho.
+- `/despesas`: lançamentos, recorrências e transições entre pendente, pago e cancelado.
+- `/funcionarios`, `/folha` e `/cargos-permissoes`: cadastro, custos registrados, folha e permissões por usuário no navegador.
+
+### Limitações
+
+- Estes módulos permanecem em `localStorage`; autenticação e autorização reais dependem de API e persistência segura no backend.
+
+---
+
+## 2026-11-02 — Estoque: conferência e entradas na operação do dia
+
+### Progresso
+
+- `/estoque`: CTAs “Registrar produtos que entraram” e “Iniciar conferência” (modais); KPI agregado da conferência do dia; Saldo exibe contado após conferência; tooltips nas colunas; `lastConference` no inventário local.
+
+### Próximos passos
+
+1. API de estoque no backend + troca do localStorage.
+2. Política definitiva de rendimento e baixas.
+
+---
+
+## 2026-11-02 — Pratos e receitas + cadeia Compras/Estoque/Vendas (UI)
+
+### Progresso
+
+- `/pratos-receitas`: CRUD de pratos, receita g/kg, indisponível sem ingredientes; `MenuCatalogService` (localStorage).
+- Vendas “Pratos prontos” consome o mesmo catálogo; snapshot de preço nas linhas; baixa estimada no estoque quando há receita.
+- `/compras` cria produtos e entradas; estoque diário com conferência; conversão g/kg ↔ unidade de estoque.
+- Sem API backend nesta etapa; dados temporários no navegador.
+
+### Próximos passos
+
+1. API de cardápio/estoque/compras no backend.
+2. Política definitiva de rendimento e baixas.
+3. Fornecedores e vínculo financeiro das compras.
+
+---
+
+## 2026-11-02 — UI Estoque + header (mock)
+
+### Progresso
+
+- Página `/estoque` com dados mock: KPIs, tabela filtrável, paginação (20), painel de detalhes e histórico.
+- Modal “Registrar movimentação” em etapas (busca/seleção → cadastro rápido se item não existir → entrada/saída).
+- Header: dropdowns de notificações e modo (placeholder de tema).
+- Sem integração Neon/API neste commit — apenas frontend UI/UX.
+
+### Próximos passos
+
+1. Requisitos reais de estoque em `docs/requirements/`.
+2. API de estoque no backend + troca do mock.
+3. Tema claro/escuro de verdade e notificações reais.
+
+---
+
 ## 2026-11-02 — Fundação (estado atual)
 
 ### Progresso

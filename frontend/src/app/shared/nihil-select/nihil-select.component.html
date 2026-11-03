@@ -1,0 +1,54 @@
+<div
+  class="nihil-select"
+  [class.nihil-select--field]="appearance() === 'field'"
+  [class.nihil-select--form]="appearance() === 'form'"
+  [class.is-open]="open()"
+>
+  <button
+    type="button"
+    class="nihil-select__trigger"
+    [attr.aria-label]="ariaLabel() || null"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="listbox"
+    (click)="toggle($event)"
+  >
+    <span class="nihil-select__value">{{ selectedLabel() }}</span>
+    <tabler-icon
+      class="nihil-select__chevron"
+      [icon]="iconChevron"
+      [size]="16"
+      [stroke]="2"
+      aria-hidden="true"
+    />
+  </button>
+
+  @if (open()) {
+    <ul
+      class="nihil-select__menu"
+      role="listbox"
+      [attr.aria-label]="ariaLabel() || null"
+      [style.position]="menuStyle()['position'] || null"
+      [style.top]="menuStyle()['top'] || null"
+      [style.left]="menuStyle()['left'] || null"
+      [style.width]="menuStyle()['width'] || null"
+      [style.right]="menuStyle()['right'] || null"
+      [style.max-height]="menuStyle()['maxHeight'] || null"
+      [style.z-index]="menuStyle()['zIndex'] || null"
+    >
+      @for (opt of options(); track opt.value) {
+        <li role="presentation">
+          <button
+            type="button"
+            class="nihil-select__option"
+            role="option"
+            [class.is-active]="opt.value === value()"
+            [attr.aria-selected]="opt.value === value()"
+            (click)="pick(opt, $event)"
+          >
+            {{ opt.label }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

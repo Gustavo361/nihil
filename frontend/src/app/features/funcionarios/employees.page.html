@@ -1,0 +1,195 @@
+<section class="employees">
+  <div class="employees__toolbar">
+    <div>
+      <p class="employees__eyebrow">Gestão</p>
+      <h1 class="employees__title">Funcionários</h1>
+      <p class="employees__lead">
+        Cadastre a equipe e o custo mensal registrado usado na Folha de Pagamento.
+      </p>
+    </div>
+    <button type="button" class="employees__cta" (click)="openCreate()">
+      <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+      Novo funcionário
+    </button>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Dados em <strong>localStorage</strong>. O custo mensal é um valor
+      <strong>registrado para gestão</strong> — não calcula encargos legais automaticamente.
+      Use a <a routerLink="/folha">Folha de Pagamento</a> para confirmar o total do período.
+    </p>
+  </div>
+
+  <div class="employees__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconUsers" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Ativos</p>
+      <p class="kpi__value">{{ activeCount() }}</p>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="panel__filters">
+      <label class="field field--search">
+        <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+        <input
+          type="search"
+          placeholder="Buscar funcionário"
+          [ngModel]="search()"
+          (ngModelChange)="setSearch($event)"
+        />
+        @if (search().trim()) {
+          <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch()">
+            <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+          </button>
+        }
+      </label>
+      <div class="field">
+        <app-nihil-select
+          appearance="field"
+          ariaLabel="Situação"
+          [value]="statusFilter()"
+          [options]="statusFilterOptions"
+          (valueChange)="setStatusFilter($event)"
+        />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Cargo</th>
+            <th>Custo mensal</th>
+            <th>Situação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of filtered(); track e.id) {
+            <tr>
+              <td>
+                <strong>{{ e.name }}</strong>
+                @if (e.notes) {
+                  <span class="table__sub">{{ e.notes }}</span>
+                }
+              </td>
+              <td>{{ e.role }}</td>
+              <td>{{ e.monthlyCost | currency: 'BRL' }}</td>
+              <td>
+                <span class="badge" [attr.data-status]="e.status">{{ statusLabel(e.status) }}</span>
+              </td>
+              <td class="table__actions">
+                <button type="button" class="link-btn" (click)="openEdit(e)">Editar</button>
+                @if (e.status === 'active') {
+                  <button type="button" class="link-btn link-btn--danger" (click)="deactivate(e)">
+                    Desativar
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="table__empty">Nenhum funcionário cadastrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (modal() === 'form') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="emp-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="emp-title" class="modal__title">
+          {{ editingId() ? 'Editar funcionário' : 'Novo funcionário' }}
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <form class="modal-form" (ngSubmit)="save()">
+        <div class="modal-form__field">
+          <label for="emp-name">Nome</label>
+          <input id="emp-name" type="text" name="name" [ngModel]="formName()" (ngModelChange)="formName.set($event)" required />
+        </div>
+        <div class="modal-form__field">
+          <label for="emp-role">Cargo</label>
+          <input id="emp-role" type="text" name="role" [ngModel]="formRole()" (ngModelChange)="formRole.set($event)" required />
+        </div>
+        <div class="modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="emp-cost">Custo mensal registrado</label>
+            <input
+              #costInput
+              id="emp-cost"
+              type="text"
+              inputmode="decimal"
+              name="cost"
+              placeholder="0,00"
+              [ngModel]="formCostText()"
+              (ngModelChange)="onCostInput($event, costInput)"
+              (blur)="onCostBlur()"
+              required
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Situação</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Situação"
+              [value]="formStatus()"
+              [options]="formStatusOptions"
+              (valueChange)="setFormStatus($event)"
+            />
+          </div>
+        </div>
+        <div class="modal-form__field">
+          <label for="emp-notes">Observações</label>
+          <input id="emp-notes" type="text" name="notes" [ngModel]="formNotes()" (ngModelChange)="formNotes.set($event)" />
+        </div>
+        <fieldset class="access-form">
+          <legend>Acesso ao sistema</legend>
+          <label class="access-form__toggle" for="emp-access">
+            <input
+              id="emp-access"
+              type="checkbox"
+              [checked]="formAccessEnabled()"
+              (change)="setFormAccessEnabled($any($event.target).checked)"
+            />
+            Criar e liberar acesso para este funcionário
+          </label>
+          @if (formAccessEnabled() || formUsername()) {
+            <div class="modal-form__field">
+              <label for="emp-username">Usuário de acesso</label>
+              <input
+                id="emp-username"
+                type="text"
+                name="username"
+                autocomplete="username"
+                placeholder="ex.: joao.caixa"
+                [ngModel]="formUsername()"
+                (ngModelChange)="formUsername.set($event)"
+              />
+              <small>A senha será criada quando a autenticação segura estiver conectada ao backend.</small>
+            </div>
+          }
+        </fieldset>
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="employees__cta" [disabled]="saving()">
+            {{ saving() ? 'Salvando…' : 'Salvar' }}
+          </button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

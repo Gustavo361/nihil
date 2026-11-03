@@ -1,0 +1,104 @@
+<section class="access">
+  <div class="access__header">
+    <div>
+      <p class="access__eyebrow">Gestão</p>
+      <h1>Cargos e permissões</h1>
+      <p>Defina quais funcionalidades cada funcionário com acesso pode utilizar.</p>
+    </div>
+    <a class="access__cta" routerLink="/funcionarios">Cadastrar funcionário</a>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Os acessos e permissões abaixo ficam salvos apenas neste navegador enquanto a autenticação não estiver
+      conectada ao backend. Crie o usuário de acesso no cadastro do funcionário.
+    </p>
+  </div>
+
+  <section class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Login</th>
+            <th>Situação</th>
+            <th>Funcionalidades permitidas</th>
+            <th>Adicionar funcionalidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.employee.id) {
+            <tr>
+              <td>
+                <strong>{{ row.employee.name }}</strong>
+                <span class="table__sub">{{ row.employee.role }}</span>
+              </td>
+              <td>
+                @if (row.access) {
+                  <code>{{ row.access.username }}</code>
+                } @else {
+                  <span class="muted">Sem acesso criado</span>
+                }
+              </td>
+              <td>
+                @if (row.access?.enabled && row.employee.status === 'active') {
+                  <span class="badge badge--active">Liberado</span>
+                } @else if (row.access) {
+                  <span class="badge">Bloqueado</span>
+                } @else {
+                  <span class="badge">Sem acesso</span>
+                }
+              </td>
+              <td>
+                @if (row.access?.permissions?.length) {
+                  <div class="permission-list">
+                    @for (permission of row.access!.permissions; track permission) {
+                      <span class="permission-chip">
+                        {{ permissionLabel(permission) }}
+                        <button
+                          type="button"
+                          [attr.aria-label]="'Remover ' + permissionLabel(permission)"
+                          (click)="removePermission(row.employee.id, permission)"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <span class="muted">Nenhuma funcionalidade liberada</span>
+                }
+              </td>
+              <td>
+                @if (row.access) {
+                  <div class="permission-add">
+                    <select
+                      [value]="selectionByEmployee()[row.employee.id] ?? ''"
+                      (change)="setSelection(row.employee.id, $any($event.target).value)"
+                      [attr.aria-label]="'Funcionalidade para ' + row.employee.name"
+                    >
+                      <option value="">Selecionar funcionalidade</option>
+                      @for (option of permissionOptions; track option.value) {
+                        <option [value]="option.value" [disabled]="row.access.permissions.includes(option.value)">
+                          {{ option.label }}
+                        </option>
+                      }
+                    </select>
+                    <button type="button" class="link-btn" (click)="addPermission(row.employee.id)">Adicionar</button>
+                  </div>
+                } @else {
+                  <a class="link-btn" routerLink="/funcionarios">Criar acesso</a>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="table__empty">Nenhum funcionário cadastrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

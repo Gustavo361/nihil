@@ -35,6 +35,128 @@
         />
         <span>{{ pageMeta().title }}</span>
       </h1>
+
+      <div class="shell__actions">
+        <div class="shell__header-menu" [class.shell__header-menu--open]="openHeaderMenu() === 'notifications'">
+          <button
+            type="button"
+            class="shell__action-trigger"
+            title="Notificações"
+            aria-label="Notificações"
+            [attr.aria-expanded]="openHeaderMenu() === 'notifications'"
+            aria-haspopup="true"
+            (click)="toggleHeaderMenu('notifications', $event)"
+          >
+            <span class="shell__action">
+              <tabler-icon [icon]="iconBell" [size]="20" [stroke]="1.75" aria-hidden="true" />
+            </span>
+            <tabler-icon
+              class="shell__action-chevron"
+              [icon]="openHeaderMenu() === 'notifications' ? iconChevronUp : iconChevronDown"
+              [size]="16"
+              [stroke]="2"
+              aria-hidden="true"
+            />
+          </button>
+
+          @if (openHeaderMenu() === 'notifications') {
+            <div class="shell__dropdown shell__dropdown--notifications" role="menu" aria-label="Notificações">
+              <p class="shell__dropdown-title">Notificações</p>
+              @if (deliveryReminders().length) {
+                @for (rem of deliveryReminders(); track rem.occurrenceId) {
+                  <div class="shell__notice" role="menuitem">
+                    <p class="shell__notice-title">Entrega · {{ rem.supplierName }}</p>
+                    <p class="shell__notice-meta">
+                      Previsto {{ rem.plannedAt | date: 'dd/MM HH:mm' }}
+                    </p>
+                    <div class="shell__notice-actions">
+                      <button
+                        type="button"
+                        class="shell__notice-btn"
+                        (click)="openDeliveryReceive(rem.occurrenceId, $event)"
+                      >
+                        Registrar recebimento
+                      </button>
+                      <button
+                        type="button"
+                        class="shell__notice-btn shell__notice-btn--ghost"
+                        (click)="openDeliverySnooze(rem.occurrenceId, $event)"
+                      >
+                        Adiar
+                      </button>
+                      <button
+                        type="button"
+                        class="shell__notice-btn shell__notice-btn--ghost"
+                        (click)="markDeliveryMissed(rem.occurrenceId, $event)"
+                      >
+                        Não entregue
+                      </button>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <p class="shell__dropdown-empty">Nenhuma notificação por enquanto.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="shell__header-menu" [class.shell__header-menu--open]="openHeaderMenu() === 'theme'">
+          <button
+            type="button"
+            class="shell__action-trigger"
+            title="Modo de exibição"
+            aria-label="Modo de exibição"
+            [attr.aria-expanded]="openHeaderMenu() === 'theme'"
+            aria-haspopup="true"
+            (click)="toggleHeaderMenu('theme', $event)"
+          >
+            <span class="shell__action">
+              <tabler-icon
+                [icon]="themeMode() === 'dark' ? iconTheme : iconSun"
+                [size]="20"
+                [stroke]="1.75"
+                aria-hidden="true"
+              />
+            </span>
+            <tabler-icon
+              class="shell__action-chevron"
+              [icon]="openHeaderMenu() === 'theme' ? iconChevronUp : iconChevronDown"
+              [size]="16"
+              [stroke]="2"
+              aria-hidden="true"
+            />
+          </button>
+
+          @if (openHeaderMenu() === 'theme') {
+            <div class="shell__dropdown shell__dropdown--theme" role="menu" aria-label="Modo de exibição">
+              <p class="shell__dropdown-title">Modo</p>
+              <button
+                type="button"
+                class="shell__dropdown-item"
+                role="menuitemradio"
+                [attr.aria-checked]="themeMode() === 'light'"
+                [class.is-active]="themeMode() === 'light'"
+                (click)="setTheme('light')"
+              >
+                <tabler-icon [icon]="iconSun" [size]="18" [stroke]="1.75" aria-hidden="true" />
+                Claro
+              </button>
+              <button
+                type="button"
+                class="shell__dropdown-item"
+                role="menuitemradio"
+                [attr.aria-checked]="themeMode() === 'dark'"
+                [class.is-active]="themeMode() === 'dark'"
+                (click)="setTheme('dark')"
+              >
+                <tabler-icon [icon]="iconTheme" [size]="18" [stroke]="1.75" aria-hidden="true" />
+                Escuro
+              </button>
+            </div>
+          }
+        </div>
+      </div>
     </header>
 
     <main class="shell__main">
@@ -43,4 +165,6 @@
       </div>
     </main>
   </div>
+
+  <app-toast-host />
 </div>

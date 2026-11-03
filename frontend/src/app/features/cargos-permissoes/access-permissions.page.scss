@@ -1,0 +1,23 @@
+.access { display: flex; flex-direction: column; gap: var(--nihil-space-3); }
+.access__header { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--nihil-space-2); flex-wrap: wrap; }
+.access__eyebrow { margin: 0 0 4px; color: var(--nihil-purple); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.access h1 { margin: 0 0 6px; font-size: 1.75rem; letter-spacing: -.03em; }
+.access__header p:not(.access__eyebrow) { margin: 0; color: var(--nihil-muted); }
+.access__cta { border-radius: var(--nihil-radius-sm); padding: 12px 18px; color: var(--nihil-white); background: linear-gradient(90deg, var(--nihil-purple), var(--nihil-purple-2)); font-weight: 600; text-decoration: none; }
+.notice, .panel { padding: var(--nihil-space-2); border-radius: var(--nihil-radius-md); background: var(--nihil-white); box-shadow: 0 8px 24px rgba(48, 45, 80, .04); }
+.notice { background: rgba(103, 41, 242, .08); border: 1px solid rgba(103, 41, 242, .14); }
+.notice p { margin: 0; font-size: .875rem; line-height: 1.45; }
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: .875rem; }
+.table th, .table td { padding: 12px 10px; border-bottom: 1px solid rgba(48, 45, 80, .08); text-align: left; vertical-align: top; }
+.table th { color: var(--nihil-muted); font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; }
+.table__sub, .muted { display: block; margin-top: 2px; color: var(--nihil-muted); font-size: .75rem; }
+.badge, .permission-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; border-radius: 999px; padding: 0 10px; background: rgba(48, 45, 80, .1); color: var(--nihil-muted); font-size: .75rem; font-weight: 700; }
+.badge--active { background: rgba(40, 122, 82, .14); color: #287a52; }
+.permission-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.permission-chip { background: rgba(103, 41, 242, .1); color: var(--nihil-purple); }
+.permission-chip button { border: 0; padding: 0; color: inherit; background: transparent; font-size: 1rem; line-height: 1; cursor: pointer; }
+.permission-add { display: flex; gap: 8px; align-items: center; }
+.permission-add select { min-height: 34px; max-width: 13rem; border: 1px solid rgba(48, 45, 80, .12); border-radius: var(--nihil-radius-sm); padding: 0 8px; background: var(--nihil-surface); font: inherit; }
+.link-btn { border: 0; padding: 0; color: var(--nihil-purple); background: transparent; font: inherit; font-size: .8125rem; font-weight: 600; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.table__empty { padding: 24px 10px !important; color: var(--nihil-muted); text-align: center; }

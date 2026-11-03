@@ -1,0 +1,544 @@
+<section class="stock">
+  <div class="stock__toolbar">
+    <p class="stock__eyebrow">Operação</p>
+    <span class="period-label" id="stock-day-label">Dia</span>
+    <div class="stock__intro">
+      <h1 class="visually-hidden">Estoque</h1>
+      <p class="stock__lead">
+        Acompanhe o saldo estimado do dia. Use conferência para verificar o físico e registre
+        entradas de produtos que chegaram.
+      </p>
+    </div>
+    <div class="stock__toolbar-actions">
+      <input
+        class="period-input"
+        type="date"
+        [ngModel]="day()"
+        (ngModelChange)="setDay($event)"
+        aria-labelledby="stock-day-label"
+      />
+      <div class="stock__toolbar-btns">
+        <button type="button" class="stock__cta stock__cta--ghost" (click)="openReceive()">
+          <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+          Registrar produtos que entraram
+        </button>
+        <button type="button" class="stock__cta" (click)="openConference()">
+          <tabler-icon [icon]="iconCheck" [size]="18" [stroke]="2" aria-hidden="true" />
+          Iniciar conferência
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Saldo estimado = início do dia + entradas − baixas estimadas de vendas com receita.
+      <strong>Iniciar conferência</strong> corrige o físico;
+      <strong>Registrar produtos que entraram</strong> lança entradas (também em Compras).
+      Dados em localStorage até existir API.
+    </p>
+  </div>
+
+  <div class="stock__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconPackage" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Produtos</p>
+      <p class="kpi__value">{{ indicators().total }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconAlert" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Baixo / zerado</p>
+      <p class="kpi__value">{{ indicators().low }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconMoney" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Valor estimado</p>
+      <p class="kpi__value kpi__value--money">{{ indicators().estimated | currency: 'BRL' }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconExchange" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Conferência do dia</p>
+      @if (indicators().conference; as conf) {
+        <p class="kpi__value kpi__value--split">
+          <span class="kpi__in">+{{ conf.entered }}</span>
+          <span class="kpi__sep">·</span>
+          <span class="kpi__out">−{{ conf.exited }}</span>
+        </p>
+        <p class="kpi__sub">{{ conf.counted }} produtos conferidos · a mais / a menos</p>
+      } @else {
+        <p class="kpi__value kpi__value--muted">—</p>
+        <p class="kpi__sub">sem conferência neste dia</p>
+      }
+    </article>
+  </div>
+
+  <div class="stock__grid" [class.stock__grid--detail]="selectedItem()">
+    <section class="panel">
+      <div class="panel__filters">
+        <label class="field field--search">
+          <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar por nome"
+            [ngModel]="search()"
+            (ngModelChange)="setSearch($event)"
+          />
+          @if (search().trim()) {
+            <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch()">
+              <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+            </button>
+          }
+        </label>
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Categoria"
+            [value]="category()"
+            [options]="categoryFilterOptions"
+            (valueChange)="setCategory($event)"
+          />
+        </div>
+        <div class="field">
+          <app-nihil-select
+            appearance="field"
+            ariaLabel="Situação"
+            [value]="status()"
+            [options]="statusFilterOptions"
+            (valueChange)="setStatus($event)"
+          />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th title="Quantidade no começo do dia (saldo do dia anterior).">Início</th>
+              <th title="O que entrou neste dia (compras / registros de entrada).">Entradas</th>
+              <th title="Estimativa do que saiu por vendas de pratos com receita.">Saídas estimadas</th>
+              <th title="Estoque atual: início + entradas − saídas. Após conferência, usa o valor contado.">
+                Saldo
+              </th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of dayRows(); track row.item.id) {
+              <tr
+                [class.table__row--active]="selectedId() === row.item.id"
+                (click)="selectItem(row.item)"
+              >
+                <td>
+                  <strong>{{ row.item.name }}</strong>
+                  <span class="table__sub">
+                    {{ row.item.category }} · {{ row.item.unit }}
+                    @if (row.item.packageWeightKg) {
+                      · pacote {{ row.item.packageWeightKg | number: '1.0-4' }} kg
+                    }
+                  </span>
+                </td>
+                <td>{{ formatQty(row.openingQty) }}</td>
+                <td>{{ formatQty(row.purchasedQty) }}</td>
+                <td>{{ formatQty(row.estimatedOutQty) }}</td>
+                <td>
+                  <strong>{{ formatQty(row.displayQty) }}</strong>
+                  @if (row.countedQty != null && row.countedQty !== row.estimatedQty) {
+                    <span class="table__sub">Estimado: {{ formatQty(row.estimatedQty) }}</span>
+                  } @else if (row.countedQty != null) {
+                    <span class="table__sub">Conferido</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge" [attr.data-status]="row.item.status">
+                    {{ statusLabel(row.item.status) }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="table__empty">
+                  <div class="empty">
+                    <p>Nenhum produto no estoque.</p>
+                    <button type="button" class="stock__cta" (click)="openReceive()">
+                      Registrar primeira entrada
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (selectedItem(); as item) {
+      <aside class="detail">
+        <div class="detail__head">
+          <div>
+            <p class="detail__eyebrow">Detalhe</p>
+            <h2>{{ item.name }}</h2>
+          </div>
+          <button type="button" class="icon-btn" (click)="clearSelection()" aria-label="Fechar">
+            <tabler-icon [icon]="iconClose" [size]="18" [stroke]="1.75" />
+          </button>
+        </div>
+
+        <dl class="detail__meta">
+          <div>
+            <dt>Categoria</dt>
+            <dd>{{ item.category }}</dd>
+          </div>
+          <div>
+            <dt>Unidade</dt>
+            <dd>{{ item.unit }}</dd>
+          </div>
+          <div>
+            <dt>Custo un.</dt>
+            <dd>{{ item.unitCost | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Mínimo</dt>
+            <dd>{{ formatQty(item.minQuantity) }} {{ item.unit }}</dd>
+          </div>
+          <div>
+            <dt>Saldo atual</dt>
+            <dd>{{ formatQty(item.quantity) }} {{ item.unit }}</dd>
+          </div>
+          @if (selectedRow(); as row) {
+            <div>
+              <dt>Saldo do dia</dt>
+              <dd>{{ formatQty(row.displayQty) }} {{ item.unit }}</dd>
+            </div>
+            @if (row.countedQty != null && row.countedQty !== row.estimatedQty) {
+              <div>
+                <dt>Estimado (antes da conferência)</dt>
+                <dd>{{ formatQty(row.estimatedQty) }} {{ item.unit }}</dd>
+              </div>
+            }
+          }
+        </dl>
+
+        <h3 class="detail__subtitle">Movimentos</h3>
+        @if (selectedMovements().length) {
+          <ul class="mov-list">
+            @for (m of selectedMovements(); track m.id) {
+              <li>
+                <div>
+                  <strong>{{ movementLabel(m.type) }}</strong>
+                  <span>{{ m.note }}</span>
+                </div>
+                <strong>{{ formatQty(m.quantity) }} {{ m.unit }}</strong>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="detail__hint">Sem movimentos ainda.</p>
+        }
+      </aside>
+    }
+  </div>
+</section>
+
+@if (modal() === 'conference') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="conf-title">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="conf-title" class="modal__title">Conferência de estoque</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Informe a quantidade física encontrada no dia {{ day() }}. O saldo estimado serve de referência.
+      </p>
+
+      <div class="conf-table-wrap">
+        <table class="table conf-table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Estimado</th>
+              <th>Contado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of conferenceRows(); track row.item.id) {
+              <tr>
+                <td>
+                  <strong>{{ row.item.name }}</strong>
+                  <span class="table__sub">{{ row.item.unit }}</span>
+                </td>
+                <td>{{ formatQty(row.estimatedQty) }}</td>
+                <td>
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    class="conf-input"
+                    [ngModel]="confText(row.item.id)"
+                    (ngModelChange)="onConfInput(row.item.id, $event)"
+                    [name]="'conf-' + row.item.id"
+                    [attr.aria-label]="'Contado ' + row.item.name"
+                  />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="table__empty">
+                  <p class="empty">Nenhum produto cadastrado. Inclua um abaixo.</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="conf-new">
+        <button type="button" class="link-btn" (click)="toggleConfNew()">
+          {{ confNewOpen() ? 'Cancelar novo produto' : 'Produto não listado — cadastrar agora' }}
+        </button>
+
+        @if (confNewOpen()) {
+          <div class="modal-form conf-new__form">
+            <div class="modal-form__field">
+              <label for="conf-name">Nome</label>
+              <input id="conf-name" type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" name="confName" />
+            </div>
+            <div class="modal-form__row modal-form__row--2">
+              <div class="modal-form__field">
+                <label>Categoria</label>
+                <app-nihil-select
+                  appearance="form"
+                  ariaLabel="Categoria"
+                  [value]="formCategory()"
+                  [options]="categoryOptions"
+                  (valueChange)="setFormCategory($event)"
+                />
+              </div>
+              <div class="modal-form__field">
+                <label>Unidade</label>
+                <app-nihil-select
+                  appearance="form"
+                  ariaLabel="Unidade"
+                  [value]="unit()"
+                  [options]="unitOptions"
+                  (valueChange)="setUnit($event)"
+                />
+              </div>
+            </div>
+            @if (needsPackageWeight()) {
+              <div class="modal-form__field">
+                <label for="conf-weight">Peso do pacote (kg)</label>
+                <input
+                  id="conf-weight"
+                  type="text"
+                  inputmode="decimal"
+                  [ngModel]="packageWeightText()"
+                  (ngModelChange)="onPackageWeightInput($event)"
+                  name="confWeight"
+                />
+              </div>
+            }
+            <div class="modal-form__row modal-form__row--2">
+              <div class="modal-form__field">
+                <label for="conf-counted">Quantidade contada</label>
+                <input
+                  id="conf-counted"
+                  type="text"
+                  inputmode="decimal"
+                  [ngModel]="countedText()"
+                  (ngModelChange)="onCountedInput($event)"
+                  name="confCounted"
+                />
+              </div>
+              <div class="modal-form__field">
+                <label for="conf-cost">Custo unitário</label>
+                <div class="money-field">
+                  <span aria-hidden="true">R$</span>
+                  <input
+                    #confCostInput
+                    id="conf-cost"
+                    type="text"
+                    inputmode="decimal"
+                    [ngModel]="unitCostText()"
+                    (ngModelChange)="onMoneyInput($event, confCostInput)"
+                    name="confCost"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="modal-form__field">
+              <label for="conf-min">Estoque mínimo</label>
+              <input
+                id="conf-min"
+                type="text"
+                inputmode="decimal"
+                [ngModel]="minQtyText()"
+                (ngModelChange)="onMinQtyInput($event)"
+                name="confMin"
+              />
+            </div>
+            <button type="button" class="stock__cta" (click)="addProductInConference()" [disabled]="saving()">
+              Incluir na conferência
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (formError()) {
+        <p class="modal-form__error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="modal-form__actions">
+        <button type="button" class="stock__cta" (click)="saveConference()" [disabled]="saving()">
+          Salvar conferência
+        </button>
+        <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'receive') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="recv-title">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="recv-title" class="modal__title">Registrar produtos que entraram</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Lance a entrada no estoque do dia. Se o nome for novo, o produto é cadastrado (mesmo fluxo de
+        Compras).
+      </p>
+
+      <form class="modal-form" (ngSubmit)="saveReceive()">
+        <div class="modal-form__field">
+          <label for="recv-name">Nome do produto</label>
+          <input
+            id="recv-name"
+            type="text"
+            required
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="recvName"
+            placeholder="Ex.: Arroz tipo 1"
+          />
+          @if (existingHint(); as existing) {
+            <p class="modal-form__hint">
+              Já cadastrado ({{ formatQty(existing.quantity) }} {{ existing.unit }}). Nova entrada usará a
+              unidade {{ existing.unit }}.
+            </p>
+          }
+        </div>
+
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label>Categoria</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Categoria"
+              [value]="formCategory()"
+              [options]="categoryOptions"
+              (valueChange)="setFormCategory($event)"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Unidade de estoque</label>
+            @if (existingHint(); as existing) {
+              <input type="text" [value]="existing.unit" readonly />
+            } @else {
+              <app-nihil-select
+                appearance="form"
+                ariaLabel="Unidade"
+                [value]="unit()"
+                [options]="unitOptions"
+                (valueChange)="setUnit($event)"
+              />
+            }
+          </div>
+        </div>
+
+        @if (needsPackageWeight() && !existingHint()) {
+          <div class="modal-form__field">
+            <label for="recv-weight">Peso líquido do pacote (kg)</label>
+            <input
+              id="recv-weight"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="packageWeightText()"
+              (ngModelChange)="onPackageWeightInput($event)"
+              name="recvWeight"
+              placeholder="Ex.: 1"
+            />
+          </div>
+        }
+
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="recv-qty">Quantidade recebida</label>
+            <input
+              id="recv-qty"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="quantityText()"
+              (ngModelChange)="onQtyInput($event)"
+              name="recvQty"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label for="recv-cost">Custo unitário</label>
+            <div class="money-field">
+              <span aria-hidden="true">R$</span>
+              <input
+                #recvCostInput
+                id="recv-cost"
+                type="text"
+                inputmode="decimal"
+                [ngModel]="unitCostText()"
+                (ngModelChange)="onMoneyInput($event, recvCostInput)"
+                name="recvCost"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-form__field">
+          <label for="recv-min">Estoque mínimo (alerta)</label>
+          <input
+            id="recv-min"
+            type="text"
+            inputmode="decimal"
+            [ngModel]="minQtyText()"
+            (ngModelChange)="onMinQtyInput($event)"
+            name="recvMin"
+          />
+        </div>
+
+        <div class="modal-form__field">
+          <label for="recv-note">Observação (opcional)</label>
+          <input
+            id="recv-note"
+            type="text"
+            [ngModel]="note()"
+            (ngModelChange)="note.set($event)"
+            name="recvNote"
+          />
+        </div>
+
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal-form__actions">
+          <button type="submit" class="stock__cta" [disabled]="saving()">Salvar entrada</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

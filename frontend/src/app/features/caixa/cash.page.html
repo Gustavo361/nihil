@@ -1,0 +1,496 @@
+<section class="cash">
+  <div class="cash__toolbar">
+    <div>
+      <p class="cash__eyebrow">Financeiro</p>
+      <h1 class="visually-hidden">Caixa</h1>
+      <p class="cash__lead">Acompanhe os recebimentos e controle o fechamento do caixa.</p>
+    </div>
+    <div class="cash__toolbar-actions">
+      <div class="cash__meta">
+        <span class="cash__meta-label">Referência</span>
+        <strong>{{ referenceDate() | date: 'dd/MM/yyyy' }}</strong>
+      </div>
+      <span class="status-pill" [class.status-pill--open]="isOpen()" [class.status-pill--closed]="!isOpen()">
+        {{ isOpen() ? 'Aberto' : 'Fechado' }}
+      </span>
+      @if (isOpen()) {
+        <button type="button" class="cash__cta cash__cta--danger" (click)="openModal('close')">
+          <tabler-icon [icon]="iconLock" [size]="18" [stroke]="2" aria-hidden="true" />
+          Fechar caixa
+        </button>
+      } @else {
+        <button type="button" class="cash__cta" (click)="openModal('open')">
+          <tabler-icon [icon]="iconLockOpen" [size]="18" [stroke]="2" aria-hidden="true" />
+          Abrir caixa
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Vendas confirmadas lançam recebimentos automaticamente nesta sessão (ou na
+      <strong>fila local</strong> se o caixa estiver fechado — enviados ao abrir).
+      Só <strong>dinheiro</strong> em espécie conta na gaveta; Pix e cartões ficam no resumo.
+      Aberto/fechado, movimentações e fila ficam no <strong>navegador (localStorage)</strong> até
+      existir API financeira.
+    </p>
+  </div>
+
+  @if (pendingCount() > 0) {
+    <div class="notice notice--pending" role="status">
+      <p>
+        <strong>{{ pendingCount() }}</strong> recebimento(s) de venda na fila aguardando abertura do
+        caixa.
+      </p>
+      <ul class="pending-list">
+        @for (item of pendingReceipts(); track item.saleId) {
+          <li>
+            {{ item.saleId }} · {{ paymentLabel(item.paymentMethod) }} ·
+            {{ item.amount | currency: 'BRL' }}
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="cash__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconBanknote" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Saldo inicial</p>
+      <p class="kpi__value">{{ drawer().openingAmount | currency: 'BRL' }}</p>
+      <div class="kpi__footer"><span>Dinheiro na abertura</span></div>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconPlus" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Entradas em dinheiro</p>
+      <p class="kpi__value">{{ drawer().cashIn | currency: 'BRL' }}</p>
+      <div class="kpi__footer"><span>Recebimentos em espécie + suprimentos</span></div>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconMinus" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Saídas em dinheiro</p>
+      <p class="kpi__value">{{ drawer().cashOut | currency: 'BRL' }}</p>
+      <div class="kpi__footer"><span>Sangrias e estornos em espécie</span></div>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconCash" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Saldo esperado em dinheiro</p>
+      <p class="kpi__value">{{ drawer().expectedCash | currency: 'BRL' }}</p>
+      <div class="kpi__footer"><span>Inicial + entradas − saídas (só espécie)</span></div>
+    </article>
+  </div>
+
+  <section class="panel panel--payments">
+    <h2 class="panel__title">Recebimentos por forma de pagamento</h2>
+    <p class="panel__hint">Pix e cartões não entram no saldo físico da gaveta.</p>
+    <div class="pay-summary">
+      <article>
+        <span>Dinheiro</span>
+        <strong>{{ drawer().payments.cash | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Pix</span>
+        <strong>{{ drawer().payments.pix | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Débito</span>
+        <strong>{{ drawer().payments.debit | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Crédito</span>
+        <strong>{{ drawer().payments.credit | currency: 'BRL' }}</strong>
+      </article>
+    </div>
+  </section>
+
+  @if (isOpen()) {
+    <div class="cash__actions">
+      <button type="button" class="ghost-btn" (click)="openModal('bleed')">
+        <tabler-icon [icon]="iconMinus" [size]="18" [stroke]="2" aria-hidden="true" />
+        Registrar sangria
+      </button>
+      <button type="button" class="ghost-btn" (click)="openModal('supply')">
+        <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+        Registrar suprimento
+      </button>
+      <button type="button" class="ghost-btn" (click)="setTab('movements')">
+        <tabler-icon [icon]="iconReceipt" [size]="18" [stroke]="2" aria-hidden="true" />
+        Ver movimentações
+      </button>
+    </div>
+  } @else {
+    <div class="empty-state panel">
+      <p>Caixa fechado. Abra uma sessão para registrar sangrias, suprimentos e acompanhar o saldo em dinheiro.</p>
+      <button type="button" class="cash__cta" (click)="openModal('open')">Abrir caixa</button>
+    </div>
+  }
+
+  <section class="panel">
+    <div class="tabs" role="tablist" aria-label="Seções do caixa">
+      <button
+        type="button"
+        role="tab"
+        class="tabs__btn"
+        [class.is-active]="tab() === 'movements'"
+        [attr.aria-selected]="tab() === 'movements'"
+        (click)="setTab('movements')"
+      >
+        Movimentações da sessão
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tabs__btn"
+        [class.is-active]="tab() === 'sessions'"
+        [attr.aria-selected]="tab() === 'sessions'"
+        (click)="setTab('sessions')"
+      >
+        Histórico de sessões
+      </button>
+    </div>
+
+    @if (tab() === 'movements') {
+      @if (!isOpen()) {
+        <div class="empty">
+          <p>Não há sessão aberta. Consulte o histórico ou abra o caixa.</p>
+        </div>
+      } @else if (sessionMovements().length === 0) {
+        <div class="empty">
+          <p>Caixa aberto sem movimentações além da abertura.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Data e horário</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+                <th>Pagamento</th>
+                <th>Valor</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (move of sessionMovements(); track move.id) {
+                <tr>
+                  <td>{{ move.at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ movementTypeLabel(move.type) }}</td>
+                  <td>{{ move.description }}</td>
+                  <td>{{ paymentLabel(move.paymentMethod) }}</td>
+                  <td
+                    [class.amount--in]="movementAmountTone(move) === 'in'"
+                    [class.amount--out]="movementAmountTone(move) === 'out'"
+                  >
+                    {{ movementSignedAmount(move) | currency: 'BRL' }}
+                  </td>
+                  <td>{{ move.user }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if (tab() === 'sessions') {
+      @if (closedSessions().length === 0 && !isOpen()) {
+        <div class="empty">
+          <p>Nenhuma sessão registrada ainda.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Sessão</th>
+                <th>Abertura</th>
+                <th>Fechamento</th>
+                <th>Saldo inicial</th>
+                <th>Esperado</th>
+                <th>Contado</th>
+                <th>Diferença</th>
+                <th>Situação</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (openSession(); as open) {
+                <tr>
+                  <td>{{ open.id }}</td>
+                  <td>{{ open.openedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>—</td>
+                  <td>{{ open.openingAmount | currency: 'BRL' }}</td>
+                  <td>{{ drawer().expectedCash | currency: 'BRL' }}</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td><span class="badge badge--open">Aberto</span></td>
+                  <td>
+                    <button type="button" class="link-btn" (click)="openSessionDetail(open)">Detalhes</button>
+                  </td>
+                </tr>
+              }
+              @for (session of closedSessions(); track session.id) {
+                <tr>
+                  <td>{{ session.id }}</td>
+                  <td>{{ session.openedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ session.closedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ session.openingAmount | currency: 'BRL' }}</td>
+                  <td>{{ session.expectedCashAtClose | currency: 'BRL' }}</td>
+                  <td>{{ session.countedAmount | currency: 'BRL' }}</td>
+                  <td>
+                    {{ session.difference | currency: 'BRL' }}
+                    <small class="diff-label">{{ differenceLabel(session.difference) }}</small>
+                  </td>
+                  <td><span class="badge badge--closed">Fechado</span></td>
+                  <td>
+                    <button type="button" class="link-btn" (click)="openSessionDetail(session)">Detalhes</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </section>
+</section>
+
+@if (modal() === 'open') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cash-open-title">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="cash-open-title" class="modal__title">Abrir caixa</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">Informe o dinheiro inicial na gaveta.</p>
+      <form class="modal-form" (ngSubmit)="confirmOpen()">
+        <div class="modal-form__field">
+          <label>Abertura</label>
+          <p class="modal-form__readonly">{{ modalAt() | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="modal-form__field">
+          <label for="open-amount">Valor inicial em dinheiro</label>
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input
+              #openAmountInput
+              id="open-amount"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [ngModel]="openAmountText()"
+              (ngModelChange)="onOpenAmountInput($event, openAmountInput)"
+              name="openAmount"
+            />
+          </div>
+        </div>
+        <div class="modal-form__field">
+          <label for="open-note">Observação (opcional)</label>
+          <textarea id="open-note" rows="3" [ngModel]="openNote()" (ngModelChange)="openNote.set($event)" name="openNote"></textarea>
+        </div>
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="cash__cta" [disabled]="saving()">Confirmar abertura</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (modal() === 'bleed' || modal() === 'supply') {
+  <div class="modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="'cash-move-title'">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="cash-move-title" class="modal__title">
+          {{ modal() === 'bleed' ? 'Registrar sangria' : 'Registrar suprimento' }}
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        {{ modal() === 'bleed' ? 'Retirada de dinheiro da gaveta.' : 'Adição de dinheiro à gaveta.' }}
+        Não substitui o módulo de Despesas.
+      </p>
+      <form class="modal-form" (ngSubmit)="confirmMovement(modal() === 'bleed' ? 'bleed' : 'supply')">
+        <div class="modal-form__field">
+          <label>Data e horário</label>
+          <p class="modal-form__readonly">{{ modalAt() | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="modal-form__field">
+          <label>Responsável</label>
+          <p class="modal-form__readonly">Administrador</p>
+        </div>
+        <div class="modal-form__field">
+          <label for="move-amount">Valor</label>
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input
+              #moveAmountInput
+              id="move-amount"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [ngModel]="moveAmountText()"
+              (ngModelChange)="onMoveAmountInput($event, moveAmountInput)"
+              name="moveAmount"
+            />
+          </div>
+        </div>
+        <div class="modal-form__field">
+          <label for="move-reason">Motivo</label>
+          <textarea
+            id="move-reason"
+            rows="3"
+            required
+            [ngModel]="moveReason()"
+            (ngModelChange)="moveReason.set($event)"
+            name="moveReason"
+          ></textarea>
+        </div>
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="cash__cta" [disabled]="saving()">Confirmar</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (modal() === 'close') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cash-close-title">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="cash-close-title" class="modal__title">Fechar caixa</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">Conferência do dinheiro em espécie. Pix e cartões ficam só no resumo.</p>
+
+      <div class="summary-box">
+        <p><span>Saldo inicial</span><strong>{{ drawer().openingAmount | currency: 'BRL' }}</strong></p>
+        <p><span>Entradas em dinheiro</span><strong>{{ drawer().cashIn | currency: 'BRL' }}</strong></p>
+        <p><span>Saídas em dinheiro</span><strong>{{ drawer().cashOut | currency: 'BRL' }}</strong></p>
+      </div>
+
+      <div class="pay-summary pay-summary--compact">
+        <article><span>Dinheiro</span><strong>{{ drawer().payments.cash | currency: 'BRL' }}</strong></article>
+        <article><span>Pix</span><strong>{{ drawer().payments.pix | currency: 'BRL' }}</strong></article>
+        <article><span>Débito</span><strong>{{ drawer().payments.debit | currency: 'BRL' }}</strong></article>
+        <article><span>Crédito</span><strong>{{ drawer().payments.credit | currency: 'BRL' }}</strong></article>
+      </div>
+
+      <form class="modal-form" (ngSubmit)="confirmClose()">
+        <div class="modal-form__field">
+          <label for="counted-amount">Dinheiro contado</label>
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input
+              #countedAmountInput
+              id="counted-amount"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [ngModel]="countedText()"
+              (ngModelChange)="onCountedInput($event, countedAmountInput)"
+              name="countedAmount"
+            />
+          </div>
+        </div>
+
+        <div class="modal-form__field">
+          <label for="close-note">Observação (opcional)</label>
+          <textarea id="close-note" rows="3" [ngModel]="closeNote()" (ngModelChange)="closeNote.set($event)" name="closeNote"></textarea>
+        </div>
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="cash__cta cash__cta--danger" [disabled]="saving()">Confirmar fechamento</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (modal() === 'session-detail' && activeSession(); as session) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cash-detail-title">
+    <button type="button" class="modal__backdrop" aria-label="Fechar" (click)="closeModal()"></button>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="cash-detail-title" class="modal__title">Sessão {{ session.id }}</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">Consulta somente leitura — sessões fechadas não são alteradas nesta tela.</p>
+
+      <div class="summary-box">
+        <p><span>Situação</span><strong>{{ statusLabel(session.status) }}</strong></p>
+        <p><span>Abertura</span><strong>{{ session.openedAt | date: 'dd/MM/yyyy HH:mm' }}</strong></p>
+        <p><span>Fechamento</span><strong>{{ session.closedAt ? (session.closedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</strong></p>
+        <p><span>Saldo inicial</span><strong>{{ session.openingAmount | currency: 'BRL' }}</strong></p>
+        @if (session.status === 'closed') {
+          <p><span>Esperado</span><strong>{{ session.expectedCashAtClose | currency: 'BRL' }}</strong></p>
+          <p><span>Contado</span><strong>{{ session.countedAmount | currency: 'BRL' }}</strong></p>
+          <p><span>Diferença</span><strong>{{ session.difference | currency: 'BRL' }} · {{ differenceLabel(session.difference) }}</strong></p>
+        }
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Descrição</th>
+              <th>Pagamento</th>
+              <th>Valor</th>
+              <th>Usuário</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (move of detailMovements(); track move.id) {
+              <tr>
+                <td>{{ move.at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ movementTypeLabel(move.type) }}</td>
+                <td>{{ move.description }}</td>
+                <td>{{ paymentLabel(move.paymentMethod) }}</td>
+                <td
+                  [class.amount--in]="movementAmountTone(move) === 'in'"
+                  [class.amount--out]="movementAmountTone(move) === 'out'"
+                >
+                  {{ movementSignedAmount(move) | currency: 'BRL' }}
+                </td>
+                <td>{{ move.user }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="table__empty">Sem movimentações nesta sessão.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-form__actions">
+        <button type="button" class="ghost-btn ghost-btn--danger" (click)="closeModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}

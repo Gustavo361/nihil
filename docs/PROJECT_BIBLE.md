@@ -499,6 +499,9 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 - [x] Docker removido do fluxo local (`docker-compose.yml` e scripts associados).
 - [x] Atalhos na raiz (`dev` / `setup` / `stop`) e `package.json` com `pnpm dev`.
 - [x] Banner Spring Boot (`banner.txt`) + saída enxuta do `dev` (portas juntas quando prontas).
+- [x] Shell layout + sidebar; UI mock de Estoque (listagem/modal/movimentação) sem API.
+- [x] UI Pratos e receitas + Compras + estoque diário; catálogo compartilhado com Vendas (localStorage, sem API).
+- [x] UIs locais de Fornecedores, Despesas, Funcionários, Folha e Cargos e permissões (localStorage, sem API/autenticação real).
 - [ ] CI básica configurada no GitHub.
 - [ ] Backups e procedimento de restauração documentados e testados.
 - [ ] Repositório GitHub remoto / push — fora do escopo desta etapa (sem commit/push).
@@ -507,6 +510,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 
 | Data | Área/funcionalidade | Validação | Comando ou cenário | Resultado/evidência |
 |---|---|---|---|---|
+| 2026-11-02 | Frontend build (pratos/compras/estoque) | Teste automático | `pnpm exec ng build --configuration=development` | exit 0 |
 | 2026-11-02 | Backend package | Teste automático | `./mvnw.cmd -DskipTests package` | BUILD SUCCESS; jar gerado |
 | 2026-11-02 | Backend tests | Teste automático | `./mvnw.cmd test` | Tests run: 2, Failures: 0, Errors: 0 (contextLoads + health); revalidado após banner |
 | 2026-11-02 | Backend smoke start | Teste manual (IA) | `spring-boot:run` / `dev` perfil `smoke` | `GET /actuator/health` → `{"status":"UP"}` |
@@ -517,9 +521,9 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 
 ### 14.3 Próxima tarefa
 
-- **Próxima tarefa:** instalar PostgreSQL local (serviço Windows), configurar `DB_*` e validar perfil `dev`; em seguida requisitos do primeiro módulo (provavelmente estoque).
-- **Pré-requisitos:** PostgreSQL local; credenciais apenas via variáveis de ambiente; sem Docker.
-- **Critério de conclusão:** backend sobe no perfil `dev` contra PostgreSQL real; migração baseline aplicada; próximo módulo com requisitos escritos.
+- **Próxima tarefa:** API de cardápio/estoque/compras substituindo localStorage; requisitos em `docs/requirements/` conforme necessário.
+- **Pré-requisitos:** decisões de rendimento/baixa e PostgreSQL/`DB_*` quando for persistir.
+- **Critério de conclusão:** endpoints cobrindo o fluxo das UIs de Compras, Estoque, Pratos e Vendas (pratos).
 
 ---
 

@@ -1,14 +1,15 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
-
-WORKDIR /workspace
-COPY backend/pom.xml backend/pom.xml
-COPY backend/src backend/src
-RUN mvn -B -f backend/pom.xml -DskipTests package
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw mvnw.cmd ./
+RUN chmod +x mvnw
+RUN ./mvnw -B dependency:go-offline
+COPY src src
+RUN ./mvnw -B clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
-
 WORKDIR /app
-COPY --from=build /workspace/backend/target/nihil-backend-*.jar /app/nihil-backend.jar
-ENV SERVER_PORT=10000
+COPY --from=build /app/target/nihil-backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 10000
-ENTRYPOINT ["sh", "-c", "exec java -Dserver.port=${PORT:-${SERVER_PORT:-10000}} -jar /app/nihil-backend.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,532 @@
+<section class="expenses">
+  <div class="expenses__toolbar">
+    <div>
+      <p class="expenses__eyebrow">Financeiro</p>
+      <h1 class="expenses__title">Despesas</h1>
+      <p class="expenses__lead">Acompanhe os gastos e a saúde financeira do restaurante.</p>
+    </div>
+    <div class="expenses__toolbar-actions">
+      <div class="period-controls">
+        <app-nihil-select
+          appearance="form"
+          ariaLabel="Tipo de período"
+          [value]="periodKind()"
+          [options]="periodKindOptions"
+          (valueChange)="setPeriodKind($event)"
+        />
+        <app-nihil-select
+          appearance="form"
+          ariaLabel="Período"
+          [value]="periodRef()"
+          [options]="periodRefOptions()"
+          (valueChange)="setPeriodRef($event)"
+        />
+      </div>
+      <button type="button" class="expenses__cta" (click)="openCreate()">
+        <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+        Nova despesa
+      </button>
+    </div>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Dados em <strong>localStorage</strong> até existir API financeira — não trate estes totais como
+      relatório oficial. Faturamento vem das <strong>vendas confirmadas</strong> (canceladas fora).
+      Compras de estoque e sangrias/suprimentos do caixa <strong>não</strong> entram automaticamente
+      como despesa. A cobertura usa <strong>compromissos do período</strong> (pendentes + pagos),
+      separados dos valores já pagos. Custos com pessoal vêm só da
+      <strong>Folha de Pagamento</strong> confirmada — não cadastre salários de novo como despesa.
+    </p>
+  </div>
+
+  <div class="expenses__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconBank" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Despesas fixas</p>
+      <p class="kpi__value">{{ fixedTotal() | currency: 'BRL' }}</p>
+      <div class="kpi__footer">
+        <span>Compromissos · pagos {{ fixedPaid() | currency: 'BRL' }}</span>
+      </div>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconReceipt" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Despesas variáveis</p>
+      <p class="kpi__value">{{ variableTotal() | currency: 'BRL' }}</p>
+      <div class="kpi__footer">
+        <span>Compromissos · pagos {{ variablePaid() | currency: 'BRL' }}</span>
+      </div>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconUsers" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Salários dos funcionários</p>
+      <p class="kpi__value">{{ salariesTotal() | currency: 'BRL' }}</p>
+      <div class="kpi__footer">
+        <span>Folhas confirmadas no período</span>
+      </div>
+    </article>
+    <article class="kpi kpi--situation" [attr.data-tone]="situation().tone">
+      <tabler-icon class="kpi__icon" [icon]="iconCash" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Situação financeira</p>
+      <p class="kpi__value">{{ situation().title }}</p>
+      @if (situation().amountLabel) {
+        <p class="kpi__amount">{{ situation().amountLabel }}</p>
+      }
+      @if (situation().message) {
+        <div class="kpi__footer">
+          <span>{{ situation().message }}</span>
+        </div>
+      }
+    </article>
+  </div>
+
+  <section class="panel">
+    <h2 class="panel__title">Receitas e despesas</h2>
+    <p class="panel__hint">
+      Comparação entre faturamento de vendas confirmadas e gastos conhecidos do período
+      {{ periodBounds().label }}. Não é lucro líquido.
+    </p>
+
+    <div class="compare-grid">
+      <article>
+        <span>Faturamento do período</span>
+        <strong class="amount--in">{{ revenue() | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Despesas fixas (compromissos)</span>
+        <strong>{{ fixedTotal() | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Despesas variáveis (compromissos)</span>
+        <strong>{{ variableTotal() | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Custos com funcionários</span>
+        <strong>{{ salariesTotal() | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>CMV (baixas com custo no momento)</span>
+        @if (cogs().withCostCount === 0 && cogs().missingCostCount === 0) {
+          <strong>{{ 0 | currency: 'BRL' }}</strong>
+        } @else if (!cogs().complete) {
+          <strong class="amount--pending">
+            {{ cogs().amount | currency: 'BRL' }}
+            <span class="table__sub">parcial · {{ cogs().missingCostCount }} sem custo histórico</span>
+          </strong>
+        } @else {
+          <strong>{{ cogs().amount | currency: 'BRL' }}</strong>
+        }
+      </article>
+      <article>
+        <span>Já pagos no período</span>
+        <strong>{{ paidTotal() | currency: 'BRL' }}</strong>
+      </article>
+      <article>
+        <span>Ainda pendentes</span>
+        <strong class="amount--pending">{{ pendingTotal() | currency: 'BRL' }}</strong>
+      </article>
+      <article class="compare-grid__diff">
+        <span>Diferença (faturamento − gastos considerados)</span>
+        <strong [class.amount--in]="difference() >= 0" [class.amount--out]="difference() < 0">
+          {{ difference() | currency: 'BRL' }}
+        </strong>
+      </article>
+    </div>
+
+    @if (!cogs().complete && cogs().missingCostCount > 0) {
+      <p class="panel__warn" role="status">
+        CMV incompleto: {{ cogs().missingCostCount }} baixa(s) de estoque sem custo registrado na
+        movimentação. O Nihil não usa o custo unitário atual para inventar histórico.
+      </p>
+    }
+
+    @if (monthlyEvolution().length) {
+      <div class="evolution">
+        <h3 class="evolution__title">Evolução mensal</h3>
+        <div class="evolution__rows">
+          @for (row of monthlyEvolution(); track row.key) {
+            <div class="evolution__row">
+              <span class="evolution__label">{{ row.label }}</span>
+              <div class="evolution__bars">
+                <div
+                  class="evolution__bar evolution__bar--rev"
+                  [style.width.%]="(row.revenue / evolutionMax()) * 100"
+                  [attr.title]="'Faturamento ' + (row.revenue | currency: 'BRL')"
+                ></div>
+                <div
+                  class="evolution__bar evolution__bar--exp"
+                  [style.width.%]="(row.expenses / evolutionMax()) * 100"
+                  [attr.title]="'Despesas ' + (row.expenses | currency: 'BRL')"
+                ></div>
+              </div>
+              <span class="evolution__vals">
+                {{ row.revenue | currency: 'BRL' }}
+                <span>/</span>
+                {{ row.expenses | currency: 'BRL' }}
+              </span>
+            </div>
+          }
+        </div>
+        <p class="evolution__legend">
+          <span class="dot dot--rev"></span> Faturamento
+          <span class="dot dot--exp"></span> Despesas (compromissos)
+        </p>
+      </div>
+    }
+  </section>
+
+  <section class="panel">
+    <div class="panel__filters">
+      <label class="field field--search">
+        <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+        <input
+          type="search"
+          placeholder="Buscar despesas"
+          [ngModel]="search()"
+          (ngModelChange)="setSearch($event)"
+        />
+        @if (search().trim()) {
+          <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch()">
+            <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+          </button>
+        }
+      </label>
+      <div class="field">
+        <app-nihil-select
+          appearance="field"
+          ariaLabel="Categoria"
+          [value]="categoryFilter()"
+          [options]="categoryFilterOptions"
+          (valueChange)="setCategoryFilter($event)"
+        />
+      </div>
+      <div class="field">
+        <app-nihil-select
+          appearance="field"
+          ariaLabel="Situação"
+          [value]="statusFilter()"
+          [options]="statusFilterOptions"
+          (valueChange)="setStatusFilter($event)"
+        />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Valor</th>
+            <th>Vencimento</th>
+            <th>Situação</th>
+            <th>Pagamento</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of filteredList(); track e.id) {
+            <tr [class.is-cancelled]="e.status === 'cancelled'">
+              <td>
+                <strong>{{ e.description }}</strong>
+                @if (e.seriesId) {
+                  <span class="table__sub">Recorrente</span>
+                }
+              </td>
+              <td>{{ categoryLabel(e.category) }}</td>
+              <td>{{ e.amount | currency: 'BRL' }}</td>
+              <td>{{ e.dueDate | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [attr.data-status]="e.status">{{ statusLabel(e.status) }}</span>
+              </td>
+              <td>
+                @if (e.paidAt) {
+                  {{ e.paidAt | date: 'dd/MM/yyyy' }}
+                } @else {
+                  —
+                }
+              </td>
+              <td class="table__actions">
+                <button type="button" class="link-btn" (click)="openDetail(e)">Ver</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="table__empty">Nenhuma despesa neste período.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (modal() === 'create' || modal() === 'edit') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exp-form-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="exp-form-title" class="modal__title">
+          {{ modal() === 'edit' ? 'Editar despesa' : 'Nova despesa' }}
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <form class="modal-form" (ngSubmit)="saveForm()">
+        <div class="modal-form__field">
+          <label for="exp-desc">Descrição</label>
+          <input
+            id="exp-desc"
+            type="text"
+            name="description"
+            [ngModel]="formDescription()"
+            (ngModelChange)="formDescription.set($event)"
+            required
+          />
+        </div>
+        <div class="modal-form__row--2">
+          <div class="modal-form__field">
+            <label>Categoria</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Categoria"
+              [value]="formCategory()"
+              [options]="formCategoryOptions"
+              (valueChange)="setFormCategory($event)"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label for="exp-amount">Valor</label>
+            <input
+              #amountInput
+              id="exp-amount"
+              type="text"
+              inputmode="decimal"
+              name="amount"
+              placeholder="0,00"
+              [ngModel]="formAmountText()"
+              (ngModelChange)="onAmountInput($event, amountInput)"
+              (blur)="onAmountBlur()"
+              required
+            />
+          </div>
+        </div>
+        <div class="modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="exp-due">Vencimento</label>
+            <input
+              id="exp-due"
+              type="date"
+              name="dueDate"
+              [ngModel]="formDueDate()"
+              (ngModelChange)="formDueDate.set($event)"
+              required
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Situação</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Situação da despesa"
+              [value]="formStatus()"
+              [options]="formStatusOptions"
+              (valueChange)="setFormStatus($event)"
+            />
+          </div>
+        </div>
+        @if (formStatus() === 'paid') {
+          <div class="modal-form__field">
+            <label for="exp-paid">Data de pagamento</label>
+            <input
+              id="exp-paid"
+              type="date"
+              name="paidAt"
+              [ngModel]="formPaidAt()"
+              (ngModelChange)="formPaidAt.set($event)"
+            />
+          </div>
+        }
+        @if (modal() === 'create' && formCategory() === 'fixed') {
+          <div class="modal-form__field">
+            <label>Recorrência</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Recorrência"
+              [value]="formRecurrence()"
+              [options]="formRecurrenceOptions"
+              (valueChange)="setFormRecurrence($event)"
+            />
+            <p class="modal-form__hint">
+              Gera um lançamento por período sem duplicar. O valor de cada ocorrência pode ser
+              ajustado depois (água, energia etc.).
+            </p>
+          </div>
+        }
+        <div class="modal-form__field">
+          <label for="exp-notes">Observações</label>
+          <input
+            id="exp-notes"
+            type="text"
+            name="notes"
+            [ngModel]="formNotes()"
+            (ngModelChange)="formNotes.set($event)"
+          />
+        </div>
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+        <div class="modal-form__actions">
+          <button type="submit" class="expenses__cta" [disabled]="saving()">
+            {{ saving() ? 'Salvando…' : 'Salvar' }}
+          </button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (modal() === 'detail' && detailExpense(); as e) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exp-detail-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="exp-detail-title" class="modal__title">{{ e.description }}</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <dl class="detail-list">
+        <div>
+          <dt>Categoria</dt>
+          <dd>{{ categoryLabel(e.category) }}</dd>
+        </div>
+        <div>
+          <dt>Valor</dt>
+          <dd>{{ e.amount | currency: 'BRL' }}</dd>
+        </div>
+        <div>
+          <dt>Vencimento</dt>
+          <dd>{{ e.dueDate | date: 'dd/MM/yyyy' }}</dd>
+        </div>
+        <div>
+          <dt>Situação</dt>
+          <dd>
+            <span class="badge" [attr.data-status]="e.status">{{ statusLabel(e.status) }}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Pagamento</dt>
+          <dd>{{ e.paidAt ? (e.paidAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
+        </div>
+        <div>
+          <dt>Observações</dt>
+          <dd>{{ e.notes || '—' }}</dd>
+        </div>
+      </dl>
+      <div class="modal-form__actions modal-form__actions--detail">
+        @if (e.status === 'pending') {
+          <button type="button" class="expenses__cta" (click)="askMarkPaid(e)">Marcar como paga</button>
+          <button type="button" class="ghost-btn" (click)="openEdit(e)">Editar</button>
+          <button type="button" class="ghost-btn ghost-btn--danger" (click)="askCancel(e)">
+            Cancelar lançamento
+          </button>
+        }
+        @if (e.status === 'paid') {
+          <button type="button" class="ghost-btn" (click)="askMarkPending(e)">Voltar para pendente</button>
+          <button type="button" class="ghost-btn" (click)="openEdit(e)">Editar</button>
+          <button type="button" class="ghost-btn ghost-btn--danger" (click)="askCancel(e)">
+            Cancelar lançamento
+          </button>
+        }
+        @if (e.status === 'cancelled') {
+          <button type="button" class="expenses__cta" (click)="reopenExpense(e)">Reabrir lançamento</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'confirm-paid' && confirmExpense(); as e) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exp-paid-title">
+    <div class="modal__backdrop" (click)="backToDetail()"></div>
+    <div class="modal__card modal__card--confirm">
+      <div class="modal__head">
+        <h2 id="exp-paid-title" class="modal__title">Confirmar pagamento</h2>
+        <button type="button" class="icon-btn" (click)="backToDetail()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Marcar <strong>{{ e.description }}</strong> ({{ e.amount | currency: 'BRL' }}) como paga?
+        Você poderá voltar para pendente depois.
+      </p>
+      <div class="modal-form__actions modal-form__actions--detail">
+        <button type="button" class="expenses__cta" (click)="confirmMarkPaid()" [disabled]="saving()">
+          {{ saving() ? 'Salvando…' : 'Sim, marcar como paga' }}
+        </button>
+        <button type="button" class="ghost-btn" (click)="backToDetail()" [disabled]="saving()">Voltar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'confirm-pending' && confirmExpense(); as e) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exp-pending-title">
+    <div class="modal__backdrop" (click)="backToDetail()"></div>
+    <div class="modal__card modal__card--confirm">
+      <div class="modal__head">
+        <h2 id="exp-pending-title" class="modal__title">Voltar para pendente</h2>
+        <button type="button" class="icon-btn" (click)="backToDetail()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Voltar <strong>{{ e.description }}</strong> ({{ e.amount | currency: 'BRL' }}) para pendente?
+        A data de pagamento será removida.
+      </p>
+      <div class="modal-form__actions modal-form__actions--detail">
+        <button type="button" class="expenses__cta" (click)="confirmMarkPending()" [disabled]="saving()">
+          {{ saving() ? 'Salvando…' : 'Sim, voltar para pendente' }}
+        </button>
+        <button type="button" class="ghost-btn" (click)="backToDetail()" [disabled]="saving()">Voltar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'confirm-cancel' && confirmExpense(); as e) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exp-cancel-title">
+    <div class="modal__backdrop" (click)="backToDetail()"></div>
+    <div class="modal__card modal__card--confirm">
+      <div class="modal__head">
+        <h2 id="exp-cancel-title" class="modal__title">Cancelar lançamento</h2>
+        <button type="button" class="icon-btn" (click)="backToDetail()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Cancelar <strong>{{ e.description }}</strong> ({{ e.amount | currency: 'BRL' }})?
+        O histórico permanece. Você pode <strong>reabrir</strong> este lançamento depois
+        @if (e.seriesId) {
+          ou a recorrência pode gerar um novo no período
+        }
+        .
+      </p>
+      <div class="modal-form__actions modal-form__actions--detail">
+        <button
+          type="button"
+          class="ghost-btn ghost-btn--danger"
+          (click)="confirmCancelExpense()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Cancelando…' : 'Sim, cancelar' }}
+        </button>
+        <button type="button" class="ghost-btn" (click)="backToDetail()" [disabled]="saving()">Voltar</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,39 @@
+<main class="login">
+  <section class="login__card" aria-labelledby="login-title">
+    <div class="login__brand" aria-hidden="true">N</div>
+    <p class="login__eyebrow">Nihil · Gestão</p>
+    <h1 id="login-title">Acesse sua conta</h1>
+    <p class="login__lead">Entre para iniciar as operações do restaurante.</p>
+
+    <form (ngSubmit)="submit()">
+      <label for="username">Usuário</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        autocomplete="username"
+        [ngModel]="username()"
+        (ngModelChange)="username.set($event)"
+        required
+        autofocus
+      />
+
+      <label for="password">Senha</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        required
+      />
+
+      @if (error()) { <p class="login__error" role="alert">{{ error() }}</p> }
+
+      <button type="submit" [disabled]="busy() || !username() || !password()">
+        {{ busy() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+  </section>
+</main>

@@ -20,6 +20,8 @@ spring:
 # @project.version@ is replaced by Maven resource filtering (spring-boot parent).
 nihil:
   version: @project.version@
+  cors:
+    allowed-origins: ${NIHIL_CORS_ALLOWED_ORIGINS:http://localhost:4200}
 
 info:
   app:

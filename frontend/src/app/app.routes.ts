@@ -12,6 +12,8 @@ import { ExpensesPage } from './features/despesas/expenses.page';
 import { EmployeesPage } from './features/funcionarios/employees.page';
 import { PayrollPage } from './features/folha/payroll.page';
 import { AccessPermissionsPage } from './features/cargos-permissoes/access-permissions.page';
+import { LoginPage } from './features/login/login.page';
+import { authGuard } from './core/auth/auth.guard';
 
 const comingSoon = (title: string) => ({
   component: ComingSoonPage,
@@ -19,9 +21,11 @@ const comingSoon = (title: string) => ({
 });
 
 export const routes: Routes = [
+  { path: 'login', component: LoginPage },
   {
     path: '',
     component: ShellLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', component: HomePage },
       { path: 'vendas', component: SalesPage },

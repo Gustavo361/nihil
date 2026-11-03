@@ -502,6 +502,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 - [x] Shell layout + sidebar; UI mock de Estoque (listagem/modal/movimentação) sem API.
 - [x] UI Pratos e receitas + Compras + estoque diário; catálogo compartilhado com Vendas (localStorage, sem API).
 - [x] UIs locais de Fornecedores, Despesas, Funcionários, Folha e Cargos e permissões (localStorage, sem API/autenticação real).
+- [T] Migração `V2__restaurant_operational_schema.sql` criada e testada no perfil H2 (`mvnw.cmd test`: 2 testes, 0 falhas); aplicação remota no Neon pendente por timeout de rede local.
 - [ ] CI básica configurada no GitHub.
 - [ ] Backups e procedimento de restauração documentados e testados.
 - [ ] Repositório GitHub remoto / push — fora do escopo desta etapa (sem commit/push).

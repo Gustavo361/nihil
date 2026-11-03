@@ -17,6 +17,7 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 ### Limitações
 
 - Estes módulos permanecem em `localStorage`; autenticação e autorização reais dependem de API e persistência segura no backend.
+- A conexão local direta ao Neon expirou na porta 5432 durante a aplicação da migração; nenhum schema ou dado foi alterado remotamente.
 
 ---
 

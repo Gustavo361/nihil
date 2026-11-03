@@ -10,6 +10,7 @@ Atualizar este arquivo **na preparação para commit** (ou quando o responsável
 
 ### Added
 
+- Migração Flyway `V2` com schema operacional inicial para usuários/permissões, funcionários, fornecedores, estoque, cardápio, compras, vendas, despesas, folha e caixa.
 - UI `/fornecedores`: fornecedores, entregas programadas e lembretes no cabeçalho (localStorage).
 - UI `/despesas`: lançamentos, recorrências, confirmação de pagamento/cancelamento e visão financeira (localStorage).
 - UI `/funcionarios`, `/folha` e `/cargos-permissoes`: cadastro de equipe, folha registrada e permissões locais de acesso.

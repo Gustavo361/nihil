@@ -501,6 +501,7 @@ As decisões importantes devem ser registradas em `docs/decisions/` como ADRs (A
 - [x] Banner Spring Boot (`banner.txt`) + saída enxuta do `dev` (portas juntas quando prontas).
 - [x] Shell layout + sidebar; UI mock de Estoque (listagem/modal/movimentação) sem API.
 - [x] UI Pratos e receitas + Compras + estoque diário; catálogo compartilhado com Vendas (localStorage, sem API).
+- [x] UIs locais de Fornecedores, Despesas, Funcionários, Folha e Cargos e permissões (localStorage, sem API/autenticação real).
 - [ ] CI básica configurada no GitHub.
 - [ ] Backups e procedimento de restauração documentados e testados.
 - [ ] Repositório GitHub remoto / push — fora do escopo desta etapa (sem commit/push).

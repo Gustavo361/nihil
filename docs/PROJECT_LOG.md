@@ -6,6 +6,20 @@ Não substitui a Bíblia (`PROJECT_BIBLE.md`) nem o `CHANGELOG.md`.
 
 ---
 
+## 2026-11-02 — Operação financeira, fornecedores e equipe (UI local)
+
+### Progresso
+
+- `/fornecedores`: cadastro, agenda de entregas e lembretes no cabeçalho.
+- `/despesas`: lançamentos, recorrências e transições entre pendente, pago e cancelado.
+- `/funcionarios`, `/folha` e `/cargos-permissoes`: cadastro, custos registrados, folha e permissões por usuário no navegador.
+
+### Limitações
+
+- Estes módulos permanecem em `localStorage`; autenticação e autorização reais dependem de API e persistência segura no backend.
+
+---
+
 ## 2026-11-02 — Estoque: conferência e entradas na operação do dia
 
 ### Progresso

@@ -5,8 +5,13 @@ import { HomePage } from './features/home/home.page';
 import { ComingSoonPage } from './shared/coming-soon/coming-soon.page';
 import { CashPage } from './features/caixa/cash.page';
 import { PurchasesPage } from './features/compras/purchases.page';
+import { SuppliersPage } from './features/fornecedores/suppliers.page';
 import { MenuPage } from './features/pratos-receitas/menu.page';
 import { SalesPage } from './features/vendas/sales.page';
+import { ExpensesPage } from './features/despesas/expenses.page';
+import { EmployeesPage } from './features/funcionarios/employees.page';
+import { PayrollPage } from './features/folha/payroll.page';
+import { AccessPermissionsPage } from './features/cargos-permissoes/access-permissions.page';
 
 const comingSoon = (title: string) => ({
   component: ComingSoonPage,
@@ -23,13 +28,13 @@ export const routes: Routes = [
       { path: 'pratos-receitas', component: MenuPage },
       { path: 'estoque', component: StockPage },
       { path: 'compras', component: PurchasesPage },
-      { path: 'fornecedores', ...comingSoon('Fornecedores') },
+      { path: 'fornecedores', component: SuppliersPage },
       { path: 'caixa', component: CashPage },
-      { path: 'despesas', ...comingSoon('Despesas') },
+      { path: 'despesas', component: ExpensesPage },
       { path: 'relatorios-financeiros', ...comingSoon('Relatórios financeiros') },
-      { path: 'funcionarios', ...comingSoon('Funcionários') },
-      { path: 'folha', ...comingSoon('Folha de pagamento') },
-      { path: 'cargos-permissoes', ...comingSoon('Cargos e permissões') },
+      { path: 'funcionarios', component: EmployeesPage },
+      { path: 'folha', component: PayrollPage },
+      { path: 'cargos-permissoes', component: AccessPermissionsPage },
       { path: 'configuracoes', ...comingSoon('Configurações') },
     ],
   },

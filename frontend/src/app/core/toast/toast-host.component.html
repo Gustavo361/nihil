@@ -5,6 +5,7 @@
       [class.toast--success]="toast.tone === 'success'"
       [class.toast--info]="toast.tone === 'info'"
       [class.toast--danger]="toast.tone === 'danger'"
+      [class.toast--has-action]="!!toast.action"
       role="status"
     >
       <span class="toast__icon" aria-hidden="true">
@@ -14,6 +15,11 @@
         <span class="toast__text">{{ toast.message }}</span>
         @if (toast.highlight) {
           <span class="toast__mark">{{ toast.highlight }}</span>
+        }
+        @if (toast.action; as action) {
+          <button type="button" class="toast__action" (click)="runAction(toast)">
+            {{ action.label }}
+          </button>
         }
       </div>
       <button type="button" class="toast__close" aria-label="Fechar" (click)="dismiss(toast)">

@@ -21,6 +21,10 @@ export class ToastHostComponent {
     this.toastService.dismiss(toast.id);
   }
 
+  runAction(toast: ToastMessage): void {
+    this.toastService.runAction(toast);
+  }
+
   iconFor(toast: ToastMessage) {
     if (toast.tone === 'danger') return this.iconClose;
     if (toast.tone === 'info') return this.iconInfo;

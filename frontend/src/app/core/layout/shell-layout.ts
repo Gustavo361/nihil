@@ -1,5 +1,6 @@
-import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import {
   IconBell,
@@ -14,7 +15,9 @@ import {
   type TablerIcon,
 } from '@tabler/icons-angular';
 import { filter, map, startWith } from 'rxjs';
+import { SupplierCatalogService } from '../suppliers/supplier-catalog.service';
 import { ToastHostComponent } from '../toast/toast-host.component';
+import { ToastService } from '../toast/toast.service';
 import { AppSidebar } from './app-sidebar';
 import { NIHIL_NAV_GROUPS } from './nav.config';
 
@@ -22,17 +25,22 @@ type HeaderMenu = 'notifications' | 'theme' | null;
 
 @Component({
   selector: 'app-shell-layout',
-  imports: [RouterOutlet, AppSidebar, TablerIconComponent, ToastHostComponent],
+  imports: [RouterOutlet, AppSidebar, TablerIconComponent, ToastHostComponent, DatePipe],
   templateUrl: './shell-layout.html',
   styleUrl: './shell-layout.scss',
 })
-export class ShellLayout {
+export class ShellLayout implements OnDestroy {
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly suppliers = inject(SupplierCatalogService);
+  private readonly toast = inject(ToastService);
+  private readonly reminderTimer: number;
 
   readonly menuOpen = signal(false);
   readonly openHeaderMenu = signal<HeaderMenu>(null);
   readonly themeMode = signal<'light' | 'dark'>('light');
+
+  readonly deliveryReminders = this.suppliers.dueReminders;
 
   readonly iconMenu = IconMenu2;
   readonly iconClose = IconX;
@@ -41,6 +49,48 @@ export class ShellLayout {
   readonly iconSun = IconSun;
   readonly iconChevronDown = IconChevronDown;
   readonly iconChevronUp = IconChevronUp;
+
+  constructor() {
+    this.suppliers.refreshAwaitingStatuses();
+    this.suppliers.materializeOccurrences();
+    this.suppliers.emitDueToasts();
+    this.reminderTimer = window.setInterval(() => {
+      this.suppliers.refreshAwaitingStatuses();
+      this.suppliers.materializeOccurrences();
+      this.suppliers.emitDueToasts();
+    }, 15_000);
+  }
+
+  ngOnDestroy(): void {
+    window.clearInterval(this.reminderTimer);
+  }
+
+  openDeliveryReceive(occurrenceId: string, event: Event): void {
+    event.stopPropagation();
+    this.closeHeaderMenus();
+    void this.router.navigate(['/fornecedores'], {
+      queryParams: { occurrenceId, action: 'receive' },
+    });
+  }
+
+  openDeliverySnooze(occurrenceId: string, event: Event): void {
+    event.stopPropagation();
+    this.closeHeaderMenus();
+    void this.router.navigate(['/fornecedores'], {
+      queryParams: { occurrenceId, action: 'snooze' },
+    });
+  }
+
+  markDeliveryMissed(occurrenceId: string, event: Event): void {
+    event.stopPropagation();
+    try {
+      this.suppliers.markMissed(occurrenceId);
+      this.toast.success('Entrega marcada como não entregue.');
+      this.closeHeaderMenus();
+    } catch (err) {
+      this.toast.danger(err instanceof Error ? err.message : 'Não foi possível atualizar a entrega.');
+    }
+  }
 
   private readonly url = toSignal(
     this.router.events.pipe(

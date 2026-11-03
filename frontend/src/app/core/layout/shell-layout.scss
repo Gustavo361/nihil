@@ -124,6 +124,60 @@
   line-height: 1.4;
 }
 
+.shell__dropdown--notifications {
+  min-width: min(360px, calc(100vw - 32px));
+  max-height: min(70vh, 480px);
+  overflow: auto;
+}
+
+.shell__notice {
+  padding: 10px;
+  border-radius: var(--nihil-radius-sm);
+  background: var(--nihil-surface);
+  margin-bottom: 8px;
+}
+
+.shell__notice:last-child {
+  margin-bottom: 0;
+}
+
+.shell__notice-title {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--nihil-text);
+}
+
+.shell__notice-meta {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--nihil-muted);
+}
+
+.shell__notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shell__notice-btn {
+  border: 0;
+  border-radius: var(--nihil-radius-sm);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--nihil-white);
+  background: linear-gradient(90deg, var(--nihil-purple), var(--nihil-purple-2));
+}
+
+.shell__notice-btn--ghost {
+  color: var(--nihil-text);
+  background: var(--nihil-white);
+  border: 1px solid rgba(103, 41, 242, 0.22);
+}
+
 .shell__dropdown-item {
   display: flex;
   align-items: center;

@@ -1,0 +1,677 @@
+<section class="suppliers">
+  <div class="suppliers__toolbar">
+    <div>
+      <p class="suppliers__eyebrow">Operação</p>
+      <h1 class="visually-hidden">Fornecedores</h1>
+      <p class="suppliers__lead">
+        Gerencie fornecedores, produtos habituais e entregas previstas.
+      </p>
+    </div>
+    <button type="button" class="suppliers__cta" (click)="openCreate()">
+      <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
+      Novo fornecedor
+    </button>
+  </div>
+
+  <div class="notice" role="note">
+    <p>
+      Dados em <strong>localStorage</strong> até existir API. Lembretes só funcionam com o Nihil
+      aberto. Produtos vêm do Estoque/Compras — não há cadastro duplicado aqui.
+      <a routerLink="/compras">Cadastrar produto em Compras</a>
+    </p>
+  </div>
+
+  <div class="suppliers__kpis">
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconTruck" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Fornecedores ativos</p>
+      <p class="kpi__value">{{ activeCount() }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconPackage" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Entregas previstas hoje</p>
+      <p class="kpi__value">{{ plannedTodayCount() }}</p>
+    </article>
+    <article class="kpi">
+      <tabler-icon class="kpi__icon" [icon]="iconCheck" [size]="22" [stroke]="1.75" aria-hidden="true" />
+      <p class="kpi__label">Aguardando confirmação</p>
+      <p class="kpi__value">{{ awaitingCount() }}</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Recebimentos hoje</p>
+      <p class="kpi__value">{{ receiptsTodayCount() }}</p>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="panel__filters">
+      <label class="field field--search">
+        <tabler-icon [icon]="iconSearch" [size]="18" [stroke]="1.75" aria-hidden="true" />
+        <input
+          type="search"
+          placeholder="Buscar fornecedor"
+          [ngModel]="search()"
+          (ngModelChange)="setSearch($event)"
+        />
+        @if (search().trim()) {
+          <button type="button" class="search-clear" aria-label="Limpar busca" (click)="clearSearch()">
+            <tabler-icon [icon]="iconClose" [size]="16" [stroke]="2" aria-hidden="true" />
+          </button>
+        }
+      </label>
+      <div class="field field--status">
+        <app-nihil-select
+          appearance="field"
+          ariaLabel="Situação"
+          [value]="statusFilter()"
+          [options]="statusFilterOptions"
+          (valueChange)="setStatusFilter($event)"
+        />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Fornecedor</th>
+            <th>Contato</th>
+            <th>Produtos habituais</th>
+            <th>Próxima entrega</th>
+            <th>Situação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filtered(); track s.id) {
+            <tr>
+              <td>
+                <strong>{{ s.name }}</strong>
+                @if (s.status === 'inactive') {
+                  <span class="table__sub">Inativo</span>
+                }
+              </td>
+              <td>
+                {{ s.contactName || '—' }}
+                @if (s.phone) {
+                  <span class="table__sub">{{ s.phone }}</span>
+                }
+              </td>
+              <td>{{ habituaisSummary(s) }}</td>
+              <td>
+                @if (nextDelivery(s); as next) {
+                  {{ next.plannedAt | date: 'dd/MM/yyyy HH:mm' }}
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                @if (nextDelivery(s); as next) {
+                  <span class="badge" [attr.data-status]="next.status">{{ statusLabel(next.status) }}</span>
+                } @else {
+                  —
+                }
+              </td>
+              <td class="table__actions">
+                <button type="button" class="link-btn" (click)="openDetail(s)">Ver</button>
+                <button type="button" class="link-btn" (click)="openEdit(s)">Editar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="table__empty">
+                <div class="empty">
+                  <p>Nenhum fornecedor cadastrado.</p>
+                  <button type="button" class="suppliers__cta" (click)="openCreate()">
+                    Cadastrar primeiro fornecedor
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (modal() === 'supplier') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="supplier-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="supplier-title" class="modal__title">
+          {{ editingId() ? 'Editar fornecedor' : 'Novo fornecedor' }}
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+
+      <form class="modal-form" (ngSubmit)="saveSupplier()">
+        <div class="modal-form__field">
+          <label for="sup-name">Nome</label>
+          <input id="sup-name" type="text" required [ngModel]="name()" (ngModelChange)="name.set($event)" name="supName" />
+        </div>
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="sup-contact">Nome de contato</label>
+            <input id="sup-contact" type="text" [ngModel]="contactName()" (ngModelChange)="contactName.set($event)" name="supContact" />
+          </div>
+          <div class="modal-form__field">
+            <label for="sup-phone">Telefone</label>
+            <input
+              id="sup-phone"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel"
+              maxlength="15"
+              placeholder="(11) 98765-4321"
+              [ngModel]="phone()"
+              (ngModelChange)="onPhoneInput($event)"
+              (keydown)="onPhoneKeydown($event)"
+              name="supPhone"
+            />
+          </div>
+        </div>
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="sup-email">E-mail</label>
+            <input
+              id="sup-email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="contato@empresa.com"
+              [ngModel]="email()"
+              (ngModelChange)="onEmailInput($event)"
+              name="supEmail"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Situação</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Situação do fornecedor"
+              [value]="status()"
+              [options]="supplierStatusOptions"
+              (valueChange)="status.set($any($event))"
+            />
+          </div>
+        </div>
+        <h3 class="modal-form__section">Endereço</h3>
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="sup-cep">CEP (opcional)</label>
+            <div class="cep-field">
+              <input
+                id="sup-cep"
+                type="text"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                placeholder="00000-000"
+                [ngModel]="cep()"
+                (ngModelChange)="onCepInput($event)"
+                name="supCep"
+              />
+              <button
+                type="button"
+                class="ghost-btn ghost-btn--compact"
+                (click)="lookupCep()"
+                [disabled]="cepLoading()"
+              >
+                {{ cepLoading() ? '…' : 'Buscar' }}
+              </button>
+            </div>
+            @if (cepHint()) {
+              <p class="modal-form__hint">{{ cepHint() }}</p>
+            }
+          </div>
+          <div class="modal-form__field">
+            <label for="sup-number">Número</label>
+            <input
+              id="sup-number"
+              type="text"
+              inputmode="text"
+              autocomplete="address-line2"
+              placeholder="Nº"
+              [ngModel]="number()"
+              (ngModelChange)="number.set($event)"
+              name="supNumber"
+            />
+          </div>
+        </div>
+        <div class="modal-form__field">
+          <label for="sup-street">Rua</label>
+          <input
+            id="sup-street"
+            type="text"
+            autocomplete="address-line1"
+            placeholder="Logradouro"
+            [ngModel]="street()"
+            (ngModelChange)="street.set($event)"
+            name="supStreet"
+          />
+        </div>
+        <div class="modal-form__row modal-form__row--2">
+          <div class="modal-form__field">
+            <label for="sup-neighborhood">Bairro</label>
+            <input
+              id="sup-neighborhood"
+              type="text"
+              autocomplete="address-level3"
+              [ngModel]="neighborhood()"
+              (ngModelChange)="neighborhood.set($event)"
+              name="supNeighborhood"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label for="sup-city">Cidade / UF</label>
+            <input
+              id="sup-city"
+              type="text"
+              readonly
+              [value]="city() && state() ? city() + '/' + state() : city() || state() || '—'"
+              title="Preenchido pela busca de CEP"
+            />
+          </div>
+        </div>
+        <div class="modal-form__field">
+          <label for="sup-notes">Observações</label>
+          <input id="sup-notes" type="text" [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="supNotes" />
+        </div>
+
+        <h3 class="modal-form__section">Produtos habituais</h3>
+        <p class="modal-form__hint">
+          Use produtos já cadastrados no estoque.
+          <a routerLink="/compras">Cadastrar em Compras</a>
+        </p>
+        <div class="modal-form__row modal-form__row--3">
+          <div class="modal-form__field">
+            <label>Produto</label>
+            <app-nihil-select
+              appearance="form"
+              ariaLabel="Produto habitual"
+              [value]="addHabitualItemId()"
+              [options]="stockOptions()"
+              (valueChange)="addHabitualItemId.set($event)"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Qtd esperada</label>
+            <input
+              type="text"
+              inputmode="decimal"
+              [ngModel]="addHabitualQtyText()"
+              (ngModelChange)="addHabitualQtyText.set($event)"
+              name="habQty"
+              placeholder="0"
+            />
+          </div>
+          <div class="modal-form__field">
+            <label>Custo previsto</label>
+            <div class="money-field">
+              <span aria-hidden="true">R$</span>
+              <input
+                #habCostInput
+                type="text"
+                inputmode="decimal"
+                [ngModel]="addHabitualCostText()"
+                (ngModelChange)="onHabitualCostInput($event, habCostInput)"
+                name="habCost"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+        </div>
+        <button type="button" class="ghost-btn" (click)="addHabitual()">Adicionar produto</button>
+
+        @if (habituais().length) {
+          <ul class="habit-edit">
+            @for (h of habituais(); track h.id) {
+              <li>
+                <div class="habit-edit__info">
+                  <strong>{{ stockName(h.stockItemId) }}</strong>
+                  <span>Unidade {{ h.unit }} · qtd esperada {{ h.expectedQty }}</span>
+                </div>
+                <strong class="habit-edit__cost">
+                  @if (h.unitCost != null) {
+                    {{ h.unitCost | currency: 'BRL' }}
+                  } @else {
+                    —
+                  }
+                </strong>
+                <button
+                  type="button"
+                  class="icon-btn icon-btn--danger"
+                  aria-label="Remover produto habitual"
+                  (click)="removeHabitual(h.id)"
+                >
+                  <tabler-icon [icon]="iconTrash" [size]="16" [stroke]="2" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <h3 class="modal-form__section">Programações de entrega</h3>
+        <button type="button" class="ghost-btn" (click)="addSchedule()">+ Programação</button>
+        @for (sch of schedules(); track sch.id) {
+          <div class="schedule-card" [class.schedule-card--off]="!sch.active">
+            <div class="schedule-card__head">
+              <label class="schedule-card__time">
+                <span>Horário</span>
+                <input
+                  type="time"
+                  [ngModel]="sch.time"
+                  (ngModelChange)="setScheduleTime(sch.id, $event)"
+                  [name]="'time_' + sch.id"
+                />
+              </label>
+              <button
+                type="button"
+                class="icon-btn icon-btn--danger"
+                aria-label="Remover programação"
+                (click)="removeSchedule(sch.id)"
+              >
+                <tabler-icon [icon]="iconTrash" [size]="16" [stroke]="2" />
+              </button>
+            </div>
+            <p class="schedule-card__label">Dias da semana</p>
+            <div class="weekday-row">
+              @for (d of weekdayOptions; track d.value) {
+                <button
+                  type="button"
+                  class="weekday"
+                  [class.weekday--on]="sch.weekdays.includes(d.value)"
+                  (click)="toggleWeekday(sch.id, d.value)"
+                >
+                  {{ d.label }}
+                </button>
+              }
+            </div>
+            <div class="schedule-card__footer">
+              <p class="schedule-card__hint">
+                Produtos: todos os habituais (snapshot na geração da ocorrência).
+              </p>
+              <label class="schedule-card__active">
+                <input type="checkbox" [checked]="sch.active" (change)="toggleScheduleActive(sch.id)" />
+                <span>Ativa</span>
+              </label>
+            </div>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="modal-form__error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal-form__actions">
+          <button type="submit" class="suppliers__cta" [disabled]="saving()">Salvar</button>
+          <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (modal() === 'detail' && detailSupplier(); as supplier) {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="detail-title" class="modal__title">{{ supplier.name }}</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        {{ supplier.contactName || 'Sem contato' }}
+        @if (supplier.phone) {
+          · {{ supplier.phone }}
+        }
+        · {{ supplier.status === 'active' ? 'Ativo' : 'Inativo' }}
+      </p>
+      <p class="modal__lead">{{ addressLabel(supplier) }}</p>
+
+      <h3 class="modal-form__section">Histórico de entregas</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Previsto</th>
+              <th>Situação</th>
+              <th>Itens</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of detailOccurrences(); track o.id) {
+              <tr>
+                <td>{{ o.plannedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td><span class="badge" [attr.data-status]="o.status">{{ statusLabel(o.status) }}</span></td>
+                <td>{{ o.expectedItems.length }} produto(s)</td>
+                <td class="table__actions">
+                  @if (o.status === 'planned' || o.status === 'awaiting') {
+                    <button type="button" class="link-btn" (click)="openReceive(o.id)">Receber</button>
+                    <button type="button" class="link-btn" (click)="openSnooze(o.id)">Adiar</button>
+                    <button type="button" class="link-btn link-btn--danger" (click)="markMissed(o.id)">
+                      Não entregue
+                    </button>
+                  }
+                  @if ((o.status === 'received' || o.status === 'partial') && receiptOf(o); as receipt) {
+                    <button type="button" class="link-btn" (click)="openEditReceipt(receipt.id)">Editar recebimento</button>
+                    <button type="button" class="link-btn link-btn--danger" (click)="openAnnul(receipt.id)">
+                      Desfazer recebimento
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="table__empty">Nenhuma ocorrência ainda. Ative uma programação.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-form__actions modal-form__actions--detail">
+        <button type="button" class="suppliers__cta" (click)="openEdit(supplier)">Editar</button>
+        <button type="button" class="ghost-btn" (click)="deactivateSupplier(supplier)">Desativar / remover</button>
+        <button type="button" class="ghost-btn ghost-btn--close" (click)="closeModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'receive' || modal() === 'edit-receipt') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="recv-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card modal__card--wide">
+      <div class="modal__head">
+        <h2 id="recv-title" class="modal__title">
+          {{ modal() === 'edit-receipt' ? 'Editar recebimento' : 'Registrar recebimento' }}
+        </h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">Ajuste quantidades e custos. Só itens marcados entram em Compras e Estoque.</p>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Recebido</th>
+              <th>Produto</th>
+              <th>Esperado</th>
+              <th>Recebido qtd</th>
+              <th>Custo un.</th>
+              <th>Obs.</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of receiveRows(); track row.stockItemId; let i = $index) {
+              <tr>
+                <td>
+                  <input type="checkbox" [checked]="row.received" (change)="toggleReceiveRow(i, $any($event.target).checked)" />
+                </td>
+                <td>{{ row.name }} <span class="table__sub">{{ row.unit }}</span></td>
+                <td>{{ row.expectedQty }}</td>
+                <td>
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [ngModel]="row.qtyText"
+                    (ngModelChange)="onReceiveQty(i, $event)"
+                    [name]="'rq_' + i"
+                    [disabled]="!row.received"
+                  />
+                </td>
+                <td>
+                  <input
+                    #costInput
+                    type="text"
+                    inputmode="decimal"
+                    [ngModel]="row.costText"
+                    (ngModelChange)="onReceiveCost(i, $event, costInput)"
+                    [name]="'rc_' + i"
+                    [disabled]="!row.received"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    [ngModel]="row.note"
+                    (ngModelChange)="setReceiveNote(i, $event)"
+                    [name]="'rn_' + i"
+                  />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-form__after-table">
+        <div class="modal-form__field">
+          <label>Adicionar produto extra</label>
+          <app-nihil-select
+            appearance="form"
+            ariaLabel="Produto extra"
+            value=""
+            [options]="stockOptions()"
+            (valueChange)="addReceiveExtraProduct($event)"
+          />
+        </div>
+        <div class="modal-form__field">
+          <label for="recv-notes">Observações</label>
+          <input id="recv-notes" type="text" [ngModel]="receiveNotes()" (ngModelChange)="receiveNotes.set($event)" name="recvNotes" />
+        </div>
+      </div>
+
+      @if (formError()) {
+        <p class="modal-form__error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="modal-form__actions">
+        <button type="button" class="suppliers__cta" (click)="goReceiveSummary()" [disabled]="saving()">
+          Revisar e confirmar
+        </button>
+        <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'receive-summary') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sum-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="sum-title" class="modal__title">Resumo do recebimento</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <ul class="chip-list">
+        @for (row of receiveRows(); track row.stockItemId) {
+          @if (row.received && row.qty) {
+            <li>
+              {{ row.name }} · {{ row.qty }} {{ row.unit }} ·
+              {{ (row.qty * (row.cost ?? 0)) | currency: 'BRL' }}
+            </li>
+          }
+        }
+      </ul>
+      <p><strong>Total:</strong> {{ receiveSummaryTotal() | currency: 'BRL' }}</p>
+      @if (formError()) {
+        <p class="modal-form__error" role="alert">{{ formError() }}</p>
+      }
+      <div class="modal-form__actions">
+        <button type="button" class="suppliers__cta" (click)="confirmReceive()" [disabled]="saving()">
+          Confirmar
+        </button>
+        <button type="button" class="ghost-btn" (click)="backToReceiveForm()" [disabled]="saving()">Voltar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'snooze') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="snooze-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="snooze-title" class="modal__title">Adiar lembrete</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">A ocorrência permanece a mesma; só o lembrete muda.</p>
+      <div class="modal-form__field">
+        <label for="snooze-at">Novo horário</label>
+        <input id="snooze-at" type="datetime-local" [ngModel]="snoozeAtLocal()" (ngModelChange)="snoozeAtLocal.set($event)" name="snoozeAt" />
+      </div>
+      @if (formError()) {
+        <p class="modal-form__error" role="alert">{{ formError() }}</p>
+      }
+      <div class="modal-form__actions">
+        <button type="button" class="suppliers__cta" (click)="confirmSnooze()">Salvar</button>
+        <button type="button" class="ghost-btn" (click)="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modal() === 'annul') {
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="annul-title">
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <h2 id="annul-title" class="modal__title">Desfazer recebimento</h2>
+        <button type="button" class="icon-btn" (click)="closeModal()" aria-label="Fechar" [disabled]="saving()">
+          <tabler-icon [icon]="iconClose" [size]="20" [stroke]="2" />
+        </button>
+      </div>
+      <p class="modal__lead">
+        Reverte compras e entradas de estoque. A ocorrência fica como Anulada e não pode ser
+        confirmada de novo sem um fluxo novo.
+      </p>
+      <div class="modal-form__field">
+        <label for="annul-reason">Justificativa (obrigatória)</label>
+        <input id="annul-reason" type="text" required [ngModel]="annulReason()" (ngModelChange)="annulReason.set($event)" name="annulReason" />
+      </div>
+      @if (formError()) {
+        <p class="modal-form__error" role="alert">{{ formError() }}</p>
+      }
+      <div class="modal-form__actions">
+        <button type="button" class="suppliers__cta" (click)="confirmAnnul()" [disabled]="saving()">
+          Confirmar anulação
+        </button>
+        <button type="button" class="ghost-btn" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

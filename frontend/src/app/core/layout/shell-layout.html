@@ -60,9 +60,43 @@
           </button>
 
           @if (openHeaderMenu() === 'notifications') {
-            <div class="shell__dropdown" role="menu" aria-label="Notificações">
+            <div class="shell__dropdown shell__dropdown--notifications" role="menu" aria-label="Notificações">
               <p class="shell__dropdown-title">Notificações</p>
-              <p class="shell__dropdown-empty">Nenhuma notificação por enquanto.</p>
+              @if (deliveryReminders().length) {
+                @for (rem of deliveryReminders(); track rem.occurrenceId) {
+                  <div class="shell__notice" role="menuitem">
+                    <p class="shell__notice-title">Entrega · {{ rem.supplierName }}</p>
+                    <p class="shell__notice-meta">
+                      Previsto {{ rem.plannedAt | date: 'dd/MM HH:mm' }}
+                    </p>
+                    <div class="shell__notice-actions">
+                      <button
+                        type="button"
+                        class="shell__notice-btn"
+                        (click)="openDeliveryReceive(rem.occurrenceId, $event)"
+                      >
+                        Registrar recebimento
+                      </button>
+                      <button
+                        type="button"
+                        class="shell__notice-btn shell__notice-btn--ghost"
+                        (click)="openDeliverySnooze(rem.occurrenceId, $event)"
+                      >
+                        Adiar
+                      </button>
+                      <button
+                        type="button"
+                        class="shell__notice-btn shell__notice-btn--ghost"
+                        (click)="markDeliveryMissed(rem.occurrenceId, $event)"
+                      >
+                        Não entregue
+                      </button>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <p class="shell__dropdown-empty">Nenhuma notificação por enquanto.</p>
+              }
             </div>
           }
         </div>

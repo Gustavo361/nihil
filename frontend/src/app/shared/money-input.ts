@@ -1,35 +1,77 @@
 /**
  * Free-form BRL money typing (comma decimals, max 2 places).
  * Does not reformat to fixed "0,00" on every keystroke — keeps mid-value edits usable.
+ * Accepts already-formatted pt-BR strings (e.g. 1.234,56).
  */
 export function parseMoneyTyping(raw: string): { text: string; value: number | null } {
-  let s = raw.replace(/[^\d.,]/g, '').replace(/\./g, ',');
-  const comma = s.indexOf(',');
-  if (comma >= 0) {
-    const intPart = s.slice(0, comma).replace(/,/g, '');
-    const decPart = s.slice(comma + 1).replace(/,/g, '').slice(0, 2);
-    s = `${intPart},${decPart}`;
+  const value = parseMoneyValue(raw);
+  let s = raw.replace(/[^\d.,]/g, '');
+
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  const decimalSep = lastComma > lastDot ? ',' : lastDot > lastComma ? '.' : ',';
+
+  if (decimalSep === ',') {
+    // pt-BR: dots are thousands
+    s = s.replace(/\./g, '');
+    const comma = s.indexOf(',');
+    if (comma >= 0) {
+      const intPart = s.slice(0, comma).replace(/,/g, '');
+      const decPart = s.slice(comma + 1).replace(/,/g, '').slice(0, 2);
+      s = `${intPart},${decPart}`;
+    } else {
+      s = s.replace(/,/g, '');
+    }
   } else {
+    // Dot used as decimal (rare while typing) — strip commas as thousands
     s = s.replace(/,/g, '');
+    const dot = s.indexOf('.');
+    if (dot >= 0) {
+      const intPart = s.slice(0, dot).replace(/\./g, '');
+      const decPart = s.slice(dot + 1).replace(/\./g, '').slice(0, 2);
+      s = `${intPart},${decPart}`;
+    }
   }
 
   if (!s) return { text: '', value: null };
 
-  let value: number | null;
-  if (s === ',') {
-    value = null;
-  } else if (s.startsWith(',')) {
-    value = Number(`0.${s.slice(1)}`);
-  } else if (s.endsWith(',')) {
-    value = Number(s.slice(0, -1) || '0');
-  } else {
-    value = Number(s.replace(',', '.'));
-  }
-
   return {
     text: s,
-    value: value == null || Number.isNaN(value) ? null : value,
+    value,
   };
+}
+
+/** Parse BRL-ish input into a number (supports 1.234,56 / 1234,56 / 1234.56). */
+export function parseMoneyValue(raw: string): number | null {
+  let s = raw.replace(/[^\d.,]/g, '').trim();
+  if (!s || s === ',' || s === '.') return null;
+
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    if (lastComma > lastDot) {
+      // 1.234,56
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      // 1,234.56
+      s = s.replace(/,/g, '');
+    }
+  } else if (lastComma >= 0) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (lastDot >= 0) {
+    const decimals = s.length - lastDot - 1;
+    // One dot with 3 digits and no other punctuation often means thousands (1.500)
+    if (decimals === 3 && s.indexOf('.') === lastDot) {
+      s = s.replace(/\./g, '');
+    }
+  }
+
+  if (s.startsWith('.')) s = `0${s}`;
+  if (s.endsWith('.')) s = s.slice(0, -1);
+
+  const value = Number(s);
+  return Number.isNaN(value) ? null : value;
 }
 
 export function moneyToInputText(value: number): string {
@@ -37,6 +79,13 @@ export function moneyToInputText(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+/** Format for display after blur / leave field. */
+export function formatMoneyInput(raw: string): { text: string; value: number | null } {
+  const value = parseMoneyValue(raw);
+  if (value == null) return { text: '', value: null };
+  return { text: moneyToInputText(value), value };
 }
 
 /** Map caret so it stays on the same digit index after sanitizing the money string. */

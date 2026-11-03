@@ -1,4 +1,16 @@
-import { Component, ElementRef, HostListener, computed, input, output, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { IconChevronDown, TablerIconComponent } from '@tabler/icons-angular';
 
 export interface NihilSelectOption {
@@ -24,6 +36,11 @@ export class NihilSelectComponent {
   readonly valueChange = output<string>();
 
   readonly open = signal(false);
+  readonly menuStyle = signal<Record<string, string>>({});
+
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly selectedLabel = computed(() => {
     const current = this.value();
@@ -31,11 +48,22 @@ export class NihilSelectComponent {
     return match?.label ?? this.placeholder();
   });
 
-  constructor(private readonly host: ElementRef<HTMLElement>) {}
+  constructor() {
+    const onScroll = (): void => {
+      if (this.open()) this.syncMenuPosition();
+    };
+    document.addEventListener('scroll', onScroll, true);
+    this.destroyRef.onDestroy(() => document.removeEventListener('scroll', onScroll, true));
+  }
 
   toggle(event: MouseEvent): void {
     event.stopPropagation();
-    this.open.update((v) => !v);
+    const next = !this.open();
+    if (next) this.syncMenuPosition();
+    this.open.set(next);
+    if (next) {
+      afterNextRender(() => this.syncMenuPosition(), { injector: this.injector });
+    }
   }
 
   pick(option: NihilSelectOption, event: MouseEvent): void {
@@ -55,5 +83,31 @@ export class NihilSelectComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.open()) this.open.set(false);
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.open()) this.syncMenuPosition();
+  }
+
+  private syncMenuPosition(): void {
+    const trigger = this.host.nativeElement.querySelector('.nihil-select__trigger');
+    if (!(trigger instanceof HTMLElement)) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const gap = 6;
+    const bottomInset = 8;
+    const top = rect.bottom + gap;
+    const maxHeight = Math.max(96, window.innerHeight - top - bottomInset);
+
+    this.menuStyle.set({
+      position: 'fixed',
+      top: `${top}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+      right: 'auto',
+      maxHeight: `${maxHeight}px`,
+      zIndex: '80',
+    });
   }
 }

@@ -16,6 +16,9 @@ export interface ReceivePurchaseForm {
   packageWeightKg?: number;
   at?: string;
   note?: string;
+  supplierId?: string;
+  deliveryOccurrenceId?: string;
+  deliveryReceiptId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,7 +41,7 @@ export class PurchaseCatalogService {
   }
 
   receive(form: ReceivePurchaseForm): Purchase {
-    const purchaseId = `C${Date.now()}`;
+    const purchaseId = `C${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const at = form.at ?? new Date().toISOString();
     const { item, created } = this.inventory.applyPurchase({
       purchaseId,
@@ -86,7 +89,12 @@ export class PurchaseCatalogService {
     const purchase = toPurchase(
       purchaseId,
       at,
-      form,
+      {
+        ...form,
+        supplierId: form.supplierId ?? existing.supplierId,
+        deliveryOccurrenceId: form.deliveryOccurrenceId ?? existing.deliveryOccurrenceId,
+        deliveryReceiptId: form.deliveryReceiptId ?? existing.deliveryReceiptId,
+      },
       item.unit,
       item.id,
       item.packageWeightKg,
@@ -171,6 +179,11 @@ function toPurchase(
       createdItem,
     },
     ...(note ? { note } : {}),
+    ...(form.supplierId ? { supplierId: form.supplierId } : {}),
+    ...(form.deliveryOccurrenceId
+      ? { deliveryOccurrenceId: form.deliveryOccurrenceId }
+      : {}),
+    ...(form.deliveryReceiptId ? { deliveryReceiptId: form.deliveryReceiptId } : {}),
   };
 }
 

@@ -23,7 +23,18 @@
   </button>
 
   @if (open()) {
-    <ul class="nihil-select__menu" role="listbox" [attr.aria-label]="ariaLabel() || null">
+    <ul
+      class="nihil-select__menu"
+      role="listbox"
+      [attr.aria-label]="ariaLabel() || null"
+      [style.position]="menuStyle()['position'] || null"
+      [style.top]="menuStyle()['top'] || null"
+      [style.left]="menuStyle()['left'] || null"
+      [style.width]="menuStyle()['width'] || null"
+      [style.right]="menuStyle()['right'] || null"
+      [style.max-height]="menuStyle()['maxHeight'] || null"
+      [style.z-index]="menuStyle()['zIndex'] || null"
+    >
       @for (opt of options(); track opt.value) {
         <li role="presentation">
           <button

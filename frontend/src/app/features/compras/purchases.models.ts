@@ -18,4 +18,8 @@ export interface Purchase {
   line: PurchaseLineSnapshot;
   /** Optional observation saved with the receipt. */
   note?: string;
+  /** Link to supplier delivery receipt (when created from Fornecedores). */
+  supplierId?: string;
+  deliveryOccurrenceId?: string;
+  deliveryReceiptId?: string;
 }

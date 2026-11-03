@@ -15,6 +15,7 @@ import {
 import { PurchaseCatalogService } from '../../core/purchases/purchase-catalog.service';
 import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
+import { parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
 import { isMassUnit } from './stock-units';
 import { STOCK_CATEGORIES, STOCK_UNITS } from './stock.mock';
@@ -329,18 +330,12 @@ export class StockPage {
     this.countedQty.set(normalized && !Number.isNaN(value) ? value : null);
   }
 
-  onMoneyInput(raw: string): void {
-    const digits = raw.replace(/\D/g, '');
-    if (!digits) {
-      this.unitCostText.set('');
-      this.unitCost.set(null);
-      return;
-    }
-    const value = Number(digits) / 100;
+  onMoneyInput(raw: string, input?: HTMLInputElement): void {
+    const caret = input?.selectionStart ?? null;
+    const { text, value } = parseMoneyTyping(raw);
+    this.unitCostText.set(text);
     this.unitCost.set(value);
-    this.unitCostText.set(
-      value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    );
+    restoreMoneyCaret(input, raw, text, caret);
   }
 
   onMinQtyInput(raw: string): void {

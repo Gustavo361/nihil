@@ -281,6 +281,7 @@ export class StockInventoryService {
       user: 'Administrador',
       refType: 'purchase',
       refId: input.purchaseId,
+      unitCostAt: roundMoney(input.unitCost),
     };
     this.movements.update((list) => [movement, ...list]);
     this.bumpDayPurchased(dayKey, item.id, qty);
@@ -379,12 +380,47 @@ export class StockInventoryService {
         user: 'Administrador',
         refType: 'sale',
         refId: saleId,
+        unitCostAt: roundMoney(item.unitCost),
       };
       this.movements.update((list) => [movement, ...list]);
       this.bumpDayEstimatedOut(dayKey, item.id, qty);
     }
     this.recomputeItemQuantities(dayKey);
     this.persist();
+  }
+
+  /**
+   * CMV from sale_out in [fromDay, toDay] using unitCostAt only.
+   * Movements without unitCostAt are counted as missing — never use current item cost.
+   */
+  cogsInDayRange(fromDay: string, toDay: string): {
+    amount: number;
+    complete: boolean;
+    withCostCount: number;
+    missingCostCount: number;
+  } {
+    const outs = this.movements().filter((m) => {
+      if (m.type !== 'sale_out') return false;
+      const day = localDayKey(m.at);
+      return day >= fromDay && day <= toDay;
+    });
+    let amount = 0;
+    let withCostCount = 0;
+    let missingCostCount = 0;
+    for (const m of outs) {
+      if (m.unitCostAt != null && Number.isFinite(m.unitCostAt) && m.unitCostAt >= 0) {
+        amount += m.quantity * m.unitCostAt;
+        withCostCount += 1;
+      } else {
+        missingCostCount += 1;
+      }
+    }
+    return {
+      amount: roundMoney(amount),
+      complete: outs.length === 0 || missingCostCount === 0,
+      withCostCount,
+      missingCostCount,
+    };
   }
 
   /** Expand recipe mass lines × portions into stock-unit outs. */

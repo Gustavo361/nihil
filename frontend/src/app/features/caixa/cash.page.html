@@ -278,12 +278,13 @@
           <div class="money-field">
             <span aria-hidden="true">R$</span>
             <input
+              #openAmountInput
               id="open-amount"
               type="text"
-              inputmode="numeric"
+              inputmode="decimal"
               autocomplete="off"
               [ngModel]="openAmountText()"
-              (ngModelChange)="onOpenAmountInput($event)"
+              (ngModelChange)="onOpenAmountInput($event, openAmountInput)"
               name="openAmount"
             />
           </div>
@@ -334,12 +335,13 @@
           <div class="money-field">
             <span aria-hidden="true">R$</span>
             <input
+              #moveAmountInput
               id="move-amount"
               type="text"
-              inputmode="numeric"
+              inputmode="decimal"
               autocomplete="off"
               [ngModel]="moveAmountText()"
-              (ngModelChange)="onMoveAmountInput($event)"
+              (ngModelChange)="onMoveAmountInput($event, moveAmountInput)"
               name="moveAmount"
             />
           </div>
@@ -398,12 +400,13 @@
           <div class="money-field">
             <span aria-hidden="true">R$</span>
             <input
+              #countedAmountInput
               id="counted-amount"
               type="text"
-              inputmode="numeric"
+              inputmode="decimal"
               autocomplete="off"
               [ngModel]="countedText()"
-              (ngModelChange)="onCountedInput($event)"
+              (ngModelChange)="onCountedInput($event, countedAmountInput)"
               name="countedAmount"
             />
           </div>

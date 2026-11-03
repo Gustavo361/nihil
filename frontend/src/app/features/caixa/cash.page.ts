@@ -14,6 +14,7 @@ import {
 } from '@tabler/icons-angular';
 import { CashRegisterService } from '../../core/cash/cash-register.service';
 import { ToastService } from '../../core/toast/toast.service';
+import { parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import {
   CashMovement,
   CashMovementType,
@@ -136,30 +137,25 @@ export class CashPage {
     raw: string,
     text: { set(v: string): void },
     value: { set(v: number | null): void },
+    input?: HTMLInputElement,
   ): void {
-    const digits = raw.replace(/\D/g, '');
-    if (!digits) {
-      text.set('');
-      value.set(null);
-      return;
-    }
-    const amount = Number(digits) / 100;
-    value.set(amount);
-    text.set(
-      amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    );
+    const caret = input?.selectionStart ?? null;
+    const parsed = parseMoneyTyping(raw);
+    text.set(parsed.text);
+    value.set(parsed.value);
+    restoreMoneyCaret(input, raw, parsed.text, caret);
   }
 
-  onOpenAmountInput(raw: string): void {
-    this.onMoneyInput(raw, this.openAmountText, this.openAmount);
+  onOpenAmountInput(raw: string, input?: HTMLInputElement): void {
+    this.onMoneyInput(raw, this.openAmountText, this.openAmount, input);
   }
 
-  onMoveAmountInput(raw: string): void {
-    this.onMoneyInput(raw, this.moveAmountText, this.moveAmount);
+  onMoveAmountInput(raw: string, input?: HTMLInputElement): void {
+    this.onMoneyInput(raw, this.moveAmountText, this.moveAmount, input);
   }
 
-  onCountedInput(raw: string): void {
-    this.onMoneyInput(raw, this.countedText, this.countedAmount);
+  onCountedInput(raw: string, input?: HTMLInputElement): void {
+    this.onMoneyInput(raw, this.countedText, this.countedAmount, input);
   }
 
   confirmOpen(): void {

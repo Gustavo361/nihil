@@ -40,6 +40,11 @@ export interface StockMovement {
   user: string;
   refType?: StockMovementRefType;
   refId?: string;
+  /**
+   * Unit cost captured at movement time (for CMV / history).
+   * Absent on legacy movements — do not invent from current item.unitCost.
+   */
+  unitCostAt?: number;
 }
 
 export interface StockDayLine {

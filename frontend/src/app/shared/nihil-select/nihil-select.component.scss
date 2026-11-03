@@ -76,8 +76,9 @@
   background: var(--nihil-white);
   border: 1px solid rgba(48, 45, 80, 0.06);
   box-shadow: 0 16px 36px rgba(48, 45, 80, 0.16);
-  max-height: 260px;
+  max-height: min(70vh, calc(100vh - 8px));
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .nihil-select__option {

@@ -181,7 +181,7 @@
       </div>
 
       <p class="panel__note">
-        Sem API de vendas ainda: histórico desta sessão no navegador. Pratos prontos usam o catálogo de
+        Sem API de vendas ainda: histórico em <strong>localStorage</strong> no navegador. Pratos prontos usam o catálogo de
         <strong>Pratos e receitas</strong>; com receita, a venda estima baixa no estoque do dia (cancelamento reverte).
         Buffet e marmita não baixam insumos. Indisponíveis não entram em novas vendas; itens já vendidos preservam
         nome e preço da época da venda.
@@ -315,12 +315,13 @@
                 <div class="money-field">
                   <span aria-hidden="true">R$</span>
                   <input
+                    #buffetPriceInput
                     id="buffet-price"
                     type="text"
-                    inputmode="numeric"
+                    inputmode="decimal"
                     [ngModel]="buffetPriceText()"
-                    (ngModelChange)="onBuffetPriceInput($event)"
-                    (keydown)="blockNonDigitKey($event)"
+                    (ngModelChange)="onBuffetPriceInput($event, buffetPriceInput)"
+                    (keydown)="blockMoneyKey($event)"
                     name="buffetPrice"
                     placeholder="0,00"
                   />
@@ -359,12 +360,13 @@
                 <div class="money-field">
                   <span aria-hidden="true">R$</span>
                   <input
+                    #kgPriceInput
                     id="kg-price"
                     type="text"
-                    inputmode="numeric"
+                    inputmode="decimal"
                     [ngModel]="kgPriceText()"
-                    (ngModelChange)="onKgPriceInput($event)"
-                    (keydown)="blockNonDigitKey($event)"
+                    (ngModelChange)="onKgPriceInput($event, kgPriceInput)"
+                    (keydown)="blockMoneyKey($event)"
                     name="kgPrice"
                     placeholder="0,00"
                   />

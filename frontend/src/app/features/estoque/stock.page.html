@@ -357,11 +357,12 @@
                 <div class="money-field">
                   <span aria-hidden="true">R$</span>
                   <input
+                    #confCostInput
                     id="conf-cost"
                     type="text"
-                    inputmode="numeric"
+                    inputmode="decimal"
                     [ngModel]="unitCostText()"
-                    (ngModelChange)="onMoneyInput($event)"
+                    (ngModelChange)="onMoneyInput($event, confCostInput)"
                     name="confCost"
                   />
                 </div>
@@ -493,11 +494,12 @@
             <div class="money-field">
               <span aria-hidden="true">R$</span>
               <input
+                #recvCostInput
                 id="recv-cost"
                 type="text"
-                inputmode="numeric"
+                inputmode="decimal"
                 [ngModel]="unitCostText()"
-                (ngModelChange)="onMoneyInput($event)"
+                (ngModelChange)="onMoneyInput($event, recvCostInput)"
                 name="recvCost"
                 placeholder="0,00"
               />

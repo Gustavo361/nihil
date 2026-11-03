@@ -23,13 +23,15 @@ import {
 } from '@tabler/icons-angular';
 import { CashRegisterService } from '../../core/cash/cash-register.service';
 import { MenuCatalogService } from '../../core/menu/menu-catalog.service';
+import { SaleCatalogService } from '../../core/sales/sale-catalog.service';
 import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
 import type { RecipeSaleLineInput } from '../../core/stock/stock-inventory.service';
+import { moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
 import type { CashPaymentMethod } from '../caixa/cash.models';
 import type { SaleMenuDish } from '../pratos-receitas/menu.models';
-import { DEFAULT_BUFFET_PRICE, DEFAULT_KG_PRICE, SALES_MOCK } from './sales.mock';
+import { DEFAULT_BUFFET_PRICE, DEFAULT_KG_PRICE } from './sales.mock';
 import { PaymentMethod, Sale, SaleDishLine, SaleModality, SaleStatus } from './sales.models';
 
 const PAGE_SIZE = 20;
@@ -48,6 +50,7 @@ export class SalesPage implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly cashRegister = inject(CashRegisterService);
   private readonly menuCatalog = inject(MenuCatalogService);
+  private readonly saleCatalog = inject(SaleCatalogService);
   private readonly inventory = inject(StockInventoryService);
   private readonly dishSuggestAnchor = viewChild<ElementRef<HTMLElement>>('dishSuggestAnchor');
   private readonly dishSuggestScrollParents: HTMLElement[] = [];
@@ -77,8 +80,8 @@ export class SalesPage implements OnDestroy {
     { value: 'cancelled', label: 'Cancelada' },
   ];
 
-  /** UI-only mock until sales API exists. */
-  readonly sales = signal<Sale[]>([...SALES_MOCK]);
+  /** Shared catalog (localStorage) until sales API exists. */
+  readonly sales = this.saleCatalog.sales;
   /** Shared with Pratos e receitas — only available dishes. */
   readonly dishes = this.menuCatalog.availableForSale;
 
@@ -295,18 +298,12 @@ export class SalesPage implements OnDestroy {
     this.modality.set(mod);
     this.formError.set('');
     if (mod === 'buffet' && this.buffetPrice() == null) {
-      this.applyMoneyInput(
-        String(Math.round(DEFAULT_BUFFET_PRICE * 100)),
-        this.buffetPriceText,
-        this.buffetPrice,
-      );
+      this.buffetPrice.set(DEFAULT_BUFFET_PRICE);
+      this.buffetPriceText.set(moneyToInputText(DEFAULT_BUFFET_PRICE));
     }
     if (mod === 'kg' && this.kgPrice() == null) {
-      this.applyMoneyInput(
-        String(Math.round(DEFAULT_KG_PRICE * 100)),
-        this.kgPriceText,
-        this.kgPrice,
-      );
+      this.kgPrice.set(DEFAULT_KG_PRICE);
+      this.kgPriceText.set(moneyToInputText(DEFAULT_KG_PRICE));
     }
     this.wizardStep.set('details');
   }
@@ -350,14 +347,35 @@ export class SalesPage implements OnDestroy {
     if (!/^\d$/.test(event.key)) event.preventDefault();
   }
 
+  blockMoneyKey(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const allowed = new Set([
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+      ',',
+      '.',
+    ]);
+    if (allowed.has(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
   onPeopleCountInput(raw: string): void {
     const digits = raw.replace(/\D/g, '');
     this.peopleCountText.set(digits);
     this.peopleCount.set(digits ? Number(digits) : null);
   }
 
-  onBuffetPriceInput(raw: string): void {
-    this.applyMoneyInput(raw, this.buffetPriceText, this.buffetPrice);
+  onBuffetPriceInput(raw: string, input?: HTMLInputElement): void {
+    this.applyMoneyInput(raw, this.buffetPriceText, this.buffetPrice, input);
   }
 
   onWeightInput(raw: string): void {
@@ -370,8 +388,8 @@ export class SalesPage implements OnDestroy {
     this.weightKg.set(normalized && !Number.isNaN(value) ? value : null);
   }
 
-  onKgPriceInput(raw: string): void {
-    this.applyMoneyInput(raw, this.kgPriceText, this.kgPrice);
+  onKgPriceInput(raw: string, input?: HTMLInputElement): void {
+    this.applyMoneyInput(raw, this.kgPriceText, this.kgPrice, input);
   }
 
   ngOnDestroy(): void {
@@ -464,8 +482,7 @@ export class SalesPage implements OnDestroy {
       lines: mod === 'dishes' ? this.cart().map((l) => ({ ...l })) : undefined,
     };
 
-    // Session-only until sales API exists.
-    this.sales.update((list) => [sale, ...list]);
+    this.saleCatalog.add(sale);
     this.selectedId.set(sale.id);
     this.period.set(this.todayInputValue());
 
@@ -515,21 +532,11 @@ export class SalesPage implements OnDestroy {
       return;
     }
 
-    this.sales.update((list) =>
-      list.map((s) =>
-        s.id === sale.id
-          ? {
-              ...s,
-              status: 'cancelled' as const,
-              cancellation: {
-                at: new Date().toISOString(),
-                reason,
-                user: 'Administrador',
-              },
-            }
-          : s,
-      ),
-    );
+    this.saleCatalog.cancel(sale.id, {
+      at: new Date().toISOString(),
+      reason,
+      user: 'Administrador',
+    });
 
     const stockReversed = this.inventory.reverseSaleOut(sale.id);
     const reverse = this.cashRegister.reverseSaleReceipt(sale.id, reason);
@@ -636,18 +643,13 @@ export class SalesPage implements OnDestroy {
     raw: string,
     textSignal: { set(v: string): void },
     valueSignal: { set(v: number | null): void },
+    input?: HTMLInputElement,
   ): void {
-    const digits = raw.replace(/\D/g, '');
-    if (!digits) {
-      textSignal.set('');
-      valueSignal.set(null);
-      return;
-    }
-    const value = Number(digits) / 100;
+    const caret = input?.selectionStart ?? null;
+    const { text, value } = parseMoneyTyping(raw);
+    textSignal.set(text);
     valueSignal.set(value);
-    textSignal.set(
-      value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    );
+    restoreMoneyCaret(input, raw, text, caret);
   }
 
   private closeDishList(): void {

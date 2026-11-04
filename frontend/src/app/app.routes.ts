@@ -14,6 +14,7 @@ import { PayrollPage } from './features/folha/payroll.page';
 import { AccessPermissionsPage } from './features/cargos-permissoes/access-permissions.page';
 import { LoginPage } from './features/login/login.page';
 import { authGuard } from './core/auth/auth.guard';
+import { SettingsPage } from './features/configuracoes/settings.page';
 
 const comingSoon = (title: string) => ({
   component: ComingSoonPage,
@@ -39,7 +40,7 @@ export const routes: Routes = [
       { path: 'funcionarios', component: EmployeesPage },
       { path: 'folha', component: PayrollPage },
       { path: 'cargos-permissoes', component: AccessPermissionsPage },
-      { path: 'configuracoes', ...comingSoon('Configurações') },
+      { path: 'configuracoes', component: SettingsPage },
     ],
   },
   { path: '**', redirectTo: '' },

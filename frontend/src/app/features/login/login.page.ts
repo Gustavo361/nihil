@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { IconEye, IconEyeOff, TablerIconComponent } from '@tabler/icons-angular';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-login-page',
-  imports: [FormsModule],
+  imports: [FormsModule, TablerIconComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
@@ -17,6 +18,13 @@ export class LoginPage {
   readonly password = signal('');
   readonly error = signal('');
   readonly busy = signal(false);
+  readonly passwordVisible = signal(false);
+  readonly iconEye = IconEye;
+  readonly iconEyeOff = IconEyeOff;
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
+  }
 
   async submit(): Promise<void> {
     if (this.busy()) return;

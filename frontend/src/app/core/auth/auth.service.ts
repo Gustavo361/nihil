@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../api/api-config';
+import { RemoteStorageBridgeService } from '../offline/remote-storage-bridge.service';
 
 const AUTH_KEY = 'nihil.auth.basic';
 
@@ -11,7 +12,7 @@ export class AuthService {
   readonly token = signal(this.stored);
   readonly username = signal(this.decodeUsername(this.stored));
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly remoteStorage: RemoteStorageBridgeService) {}
 
   async login(username: string, password: string): Promise<void> {
     const token = btoa(`${username.trim()}:${password}`);
@@ -31,6 +32,7 @@ export class AuthService {
     sessionStorage.setItem(AUTH_KEY, token);
     this.token.set(token);
     this.username.set(username.trim());
+    await this.remoteStorage.hydrate();
   }
 
   logout(): void {

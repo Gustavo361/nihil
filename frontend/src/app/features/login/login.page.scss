@@ -11,4 +11,9 @@
 .login button { min-height: 48px; margin-top: 14px; border: 0; border-radius: var(--nihil-radius-sm); color: white; background: linear-gradient(90deg,var(--nihil-purple),var(--nihil-purple-2)); font-weight: 700; cursor: pointer; }
 .login button:disabled { opacity: .6; cursor: wait; }
 .login__error { margin: 4px 0 0; color: #bd1748; font-size: .875rem; }
+.login__password-field { position: relative; }
+.login__password-field input { width: 100%; padding-right: 48px; }
+.login .login__password-toggle { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 48px; min-height: 48px; margin: 0; border: 0; border-radius: var(--nihil-radius-sm); color: var(--nihil-muted); background: transparent; }
+.login .login__password-toggle:hover { color: var(--nihil-purple); background: transparent; }
+.login .login__password-toggle:focus-visible { outline: 2px solid var(--nihil-purple); outline-offset: -3px; }
 @media (max-width: 480px) { .login__card { padding: 28px 22px; } }

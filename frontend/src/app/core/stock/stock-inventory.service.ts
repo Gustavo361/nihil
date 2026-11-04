@@ -92,8 +92,6 @@ export class StockInventoryService {
       this.movements.set(store.movements);
       this.days.set(store.days);
       this.lastConference.set(store.lastConference ?? null);
-    } else {
-      this.seedDemoInventory();
     }
     this.ensureDay(todayKey());
   }

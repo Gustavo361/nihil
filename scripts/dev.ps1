@@ -26,6 +26,18 @@ $script:SummaryShown = $false
 $script:Stopped = $false
 $script:StopEvent = New-Object System.Threading.ManualResetEventSlim $false
 
+function Import-NihilEnv([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path)) { return }
+    foreach ($line in Get-Content -LiteralPath $Path -Encoding UTF8) {
+        $trimmed = $line.Trim()
+        if (-not $trimmed -or $trimmed.StartsWith('#') -or -not $trimmed.Contains('=')) { continue }
+        $pair = $trimmed.Split('=', 2)
+        [Environment]::SetEnvironmentVariable($pair[0].Trim(), $pair[1].Trim(), 'Process')
+    }
+}
+
+Import-NihilEnv (Join-Path $backend '.env')
+
 try {
     [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $OutputEncoding = [System.Text.Encoding]::UTF8

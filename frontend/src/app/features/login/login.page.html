@@ -42,8 +42,12 @@
 
       @if (error()) { <p class="login__error" role="alert">{{ error() }}</p> }
 
-      <button type="submit" [disabled]="busy() || !username() || !password()">
-        {{ busy() ? 'Entrando…' : 'Entrar' }}
+      <button type="submit" [disabled]="busy() || !username() || !password()" [attr.aria-busy]="busy()">
+        @if (busy()) {
+          <span>Entrando</span><span class="login__dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
+        } @else {
+          Entrar
+        }
       </button>
     </form>
   </section>

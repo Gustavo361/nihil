@@ -42,17 +42,17 @@ export class RemoteStorageBridgeService {
   }
 
   async hydrate(): Promise<void> {
-    for (const key of KEYS) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/workspace/${key}`, {
-          headers: { Authorization: `Basic ${sessionStorage.getItem('nihil.auth.basic') ?? ''}` },
-        });
-        if (response.status === 204) continue;
-        if (!response.ok) throw new Error(`Falha ao carregar ${key}.`);
-        this.values.set(key, JSON.stringify(await response.json()));
-      } catch {
-        // Offline start is intentionally empty; queued writes will be retried when online.
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workspace`, {
+        headers: { Authorization: `Basic ${sessionStorage.getItem('nihil.auth.basic') ?? ''}` },
+      });
+      if (!response.ok) throw new Error('Falha ao carregar estado remoto.');
+      const states = await response.json() as Record<string, unknown>;
+      for (const key of KEYS) {
+        if (states[key] !== undefined) this.values.set(key, JSON.stringify(states[key]));
       }
+    } catch {
+      // Offline start is intentionally empty; queued writes will be retried when online.
     }
   }
 

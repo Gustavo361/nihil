@@ -4,6 +4,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,19 @@ public class WorkspaceStateController {
     } catch (JacksonException exception) {
       throw new IllegalStateException("Estado remoto inválido.", exception);
     }
+  }
+
+  @GetMapping
+  Map<String, JsonNode> readAll() {
+    var result = new LinkedHashMap<String, JsonNode>();
+    jdbc.query("select state_key, payload from user_workspace_state where username=?", rs -> {
+      try {
+        result.put(rs.getString("state_key"), objectMapper.readTree(rs.getString("payload")));
+      } catch (JacksonException exception) {
+        throw new IllegalStateException("Estado remoto inválido.", exception);
+      }
+    }, username());
+    return result;
   }
 
   @PutMapping("/{key}")

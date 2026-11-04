@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { OfflineQueueStore } from './offline-queue.store';
 import { API_BASE_URL } from '../api/api-config';
+import { ToastService } from '../toast/toast.service';
 
 const KEYS = [
   'nihil.stock.v2', 'nihil.menu.v1', 'nihil.sales.v1', 'nihil.cash.v1',
@@ -14,7 +15,7 @@ export class RemoteStorageBridgeService {
   private readonly values = new Map<string, string>();
   private installed = false;
 
-  constructor(private readonly queue: OfflineQueueStore) {}
+  constructor(private readonly queue: OfflineQueueStore, private readonly toast: ToastService) {}
 
   install(): void {
     if (this.installed || typeof window === 'undefined') return;
@@ -68,6 +69,7 @@ export class RemoteStorageBridgeService {
       } catch { /* queue below */ }
     }
     await this.queue.enqueue({ path: `/api/workspace/${key}`, method: 'PUT', body: payload });
+    this.toast.info('Sem internet: alteração salva neste dispositivo e aguardando sincronização.');
     const registration = await navigator.serviceWorker?.ready.catch(() => undefined);
     await (registration as (ServiceWorkerRegistration & { sync?: { register(tag: string): Promise<void> } }) | undefined)
       ?.sync?.register('nihil-sync').catch(() => undefined);

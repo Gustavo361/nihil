@@ -114,10 +114,6 @@
         <tabler-icon [icon]="iconPlus" [size]="18" [stroke]="2" aria-hidden="true" />
         Registrar suprimento
       </button>
-      <button type="button" class="ghost-btn" (click)="setTab('movements')">
-        <tabler-icon [icon]="iconReceipt" [size]="18" [stroke]="2" aria-hidden="true" />
-        Ver movimentações
-      </button>
     </div>
   } @else {
     <div class="empty-state panel">
@@ -285,6 +281,8 @@
               autocomplete="off"
               [ngModel]="openAmountText()"
               (ngModelChange)="onOpenAmountInput($event, openAmountInput)"
+              (focus)="onMoneyFocus(openAmountText, openAmount)"
+              (blur)="onMoneyBlur(openAmountText, openAmount)"
               name="openAmount"
             />
           </div>
@@ -342,6 +340,8 @@
               autocomplete="off"
               [ngModel]="moveAmountText()"
               (ngModelChange)="onMoveAmountInput($event, moveAmountInput)"
+              (focus)="onMoneyFocus(moveAmountText, moveAmount)"
+              (blur)="onMoneyBlur(moveAmountText, moveAmount)"
               name="moveAmount"
             />
           </div>
@@ -407,6 +407,8 @@
               autocomplete="off"
               [ngModel]="countedText()"
               (ngModelChange)="onCountedInput($event, countedAmountInput)"
+              (focus)="onMoneyFocus(countedText, countedAmount)"
+              (blur)="onMoneyBlur(countedText, countedAmount)"
               name="countedAmount"
             />
           </div>

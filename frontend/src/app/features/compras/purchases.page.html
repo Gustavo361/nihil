@@ -70,7 +70,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (p of filtered(); track trackPurchase($index, p)) {
+          @for (p of paged(); track trackPurchase($index, p)) {
             <tr>
               <td><strong>{{ p.id }}</strong></td>
               <td>{{ p.at | date: 'dd/MM/yyyy HH:mm' }}</td>
@@ -105,6 +105,7 @@
         </tbody>
       </table>
     </div>
+    <app-table-pager [total]="filtered().length" [page]="page()" (pageChange)="page.set($event)" />
   </section>
 </section>
 
@@ -221,6 +222,7 @@
                 inputmode="decimal"
                 [ngModel]="unitCostText()"
                 (ngModelChange)="onMoneyInput($event, purchaseCostInput)"
+                (blur)="onMoneyBlur(purchaseCostInput.value)"
                 name="purchaseCost"
                 placeholder="0,00"
               />
@@ -236,6 +238,8 @@
             inputmode="decimal"
             [ngModel]="minQtyText()"
             (ngModelChange)="onMinQtyInput($event)"
+            (focus)="onMinQtyFocus()"
+            (blur)="onMinQtyBlur()"
             name="purchaseMin"
           />
         </div>

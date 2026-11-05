@@ -1,0 +1,34 @@
+.table-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  color: var(--nihil-muted);
+  font-size: 0.8125rem;
+}
+
+.table-pager p { margin: 0; }
+
+.table-pager__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-pager button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(48, 45, 80, 0.15);
+  border-radius: 8px;
+  background: var(--nihil-white);
+  color: var(--nihil-purple);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.table-pager button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.table-pager button:focus-visible { outline: 2px solid var(--nihil-purple); outline-offset: 2px; }

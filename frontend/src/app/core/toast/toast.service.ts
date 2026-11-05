@@ -26,11 +26,19 @@ export interface ToastMessage {
 
 const TOAST_DURATION_MS = 5000;
 const TOAST_WITH_ACTION_MS = 25_000;
+const MAX_VISIBLE_TOASTS = 3;
+
+interface QueuedToast {
+  message: string;
+  tone: ToastTone;
+  options?: ToastOptions;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private nextId = 0;
   private readonly timers = new Map<number, number>();
+  private readonly pending: QueuedToast[] = [];
 
   readonly toasts = signal<ToastMessage[]>([]);
 
@@ -53,6 +61,7 @@ export class ToastService {
       this.timers.delete(id);
     }
     this.toasts.update((list) => list.filter((toast) => toast.id !== id));
+    this.presentNext();
   }
 
   runAction(toast: ToastMessage): void {
@@ -61,21 +70,35 @@ export class ToastService {
   }
 
   private show(message: string, tone: ToastTone, options?: ToastOptions): void {
+    const queued = { message, tone, options };
+    if (this.toasts().length >= MAX_VISIBLE_TOASTS) {
+      this.pending.push(queued);
+      return;
+    }
+    this.present(queued);
+  }
+
+  private present(queued: QueuedToast): void {
     const id = ++this.nextId;
     this.toasts.update((list) => [
       ...list,
       {
         id,
-        message,
-        tone,
-        highlight: options?.highlight,
-        action: options?.action,
+        message: queued.message,
+        tone: queued.tone,
+        highlight: queued.options?.highlight,
+        action: queued.options?.action,
       },
     ]);
     const duration =
-      options?.durationMs ??
-      (options?.action ? TOAST_WITH_ACTION_MS : TOAST_DURATION_MS);
+      queued.options?.durationMs ??
+      (queued.options?.action ? TOAST_WITH_ACTION_MS : TOAST_DURATION_MS);
     const timer = window.setTimeout(() => this.dismiss(id), duration);
     this.timers.set(id, timer);
+  }
+
+  private presentNext(): void {
+    const next = this.pending.shift();
+    if (next) this.present(next);
   }
 }

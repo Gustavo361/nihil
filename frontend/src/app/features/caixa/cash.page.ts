@@ -8,13 +8,12 @@ import {
   IconLockOpen,
   IconMinus,
   IconPlus,
-  IconReceipt,
   IconX,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { CashRegisterService } from '../../core/cash/cash-register.service';
 import { ToastService } from '../../core/toast/toast.service';
-import { parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
+import { formatMoneyInput, moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import {
   CashMovement,
   CashMovementType,
@@ -38,7 +37,6 @@ export class CashPage {
 
   readonly iconCash = IconCash;
   readonly iconBanknote = IconCashBanknote;
-  readonly iconReceipt = IconReceipt;
   readonly iconPlus = IconPlus;
   readonly iconMinus = IconMinus;
   readonly iconLock = IconLock;
@@ -156,6 +154,30 @@ export class CashPage {
 
   onCountedInput(raw: string, input?: HTMLInputElement): void {
     this.onMoneyInput(raw, this.countedText, this.countedAmount, input);
+  }
+
+  onMoneyFocus(
+    text: { (): string; set(v: string): void },
+    value: { set(v: number | null): void },
+  ): void {
+    if (parseMoneyTyping(text()).value === 0) {
+      text.set('');
+      value.set(null);
+    }
+  }
+
+  onMoneyBlur(
+    text: { (): string; set(v: string): void },
+    value: { set(v: number | null): void },
+  ): void {
+    const formatted = formatMoneyInput(text());
+    if (formatted.value == null) {
+      text.set(moneyToInputText(0));
+      value.set(0);
+      return;
+    }
+    text.set(formatted.text);
+    value.set(formatted.value);
   }
 
   confirmOpen(): void {

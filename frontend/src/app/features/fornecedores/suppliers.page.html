@@ -83,7 +83,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of filtered(); track s.id) {
+          @for (s of paged(); track s.id) {
             <tr>
               <td>
                 <strong>{{ s.name }}</strong>
@@ -132,6 +132,7 @@
         </tbody>
       </table>
     </div>
+    <app-table-pager [total]="filtered().length" [page]="page()" (pageChange)="page.set($event)" />
   </section>
 </section>
 
@@ -324,7 +325,7 @@
             </div>
           </div>
         </div>
-        <button type="button" class="ghost-btn" (click)="addHabitual()">Adicionar produto</button>
+        <button type="button" class="suppliers__cta" (click)="addHabitual()">Adicionar produto</button>
 
         @if (habituais().length) {
           <ul class="habit-edit">

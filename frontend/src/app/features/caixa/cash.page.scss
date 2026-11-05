@@ -307,8 +307,9 @@
 }
 
 .tabs__btn.is-active {
-  background: rgba(103, 41, 242, 0.12);
-  color: var(--nihil-purple);
+  background: var(--nihil-purple);
+  color: var(--nihil-white);
+  box-shadow: 0 4px 10px rgba(103, 41, 242, 0.28);
 }
 
 .table-wrap {

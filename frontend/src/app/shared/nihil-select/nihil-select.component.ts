@@ -57,7 +57,6 @@ export class NihilSelectComponent {
   }
 
   toggle(event: MouseEvent): void {
-    event.stopPropagation();
     const next = !this.open();
     if (next) this.syncMenuPosition();
     this.open.set(next);

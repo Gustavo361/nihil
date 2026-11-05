@@ -225,7 +225,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (e of filteredList(); track e.id) {
+          @for (e of pagedList(); track e.id) {
             <tr [class.is-cancelled]="e.status === 'cancelled'">
               <td>
                 <strong>{{ e.description }}</strong>
@@ -258,6 +258,7 @@
         </tbody>
       </table>
     </div>
+    <app-table-pager [total]="filteredList().length" [page]="page()" (pageChange)="page.set($event)" />
   </section>
 </section>
 

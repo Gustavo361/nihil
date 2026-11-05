@@ -20,6 +20,8 @@ import { StockInventoryService } from '../../core/stock/stock-inventory.service'
 import { ToastService } from '../../core/toast/toast.service';
 import { moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import {
   DeliveryOccurrence,
   DeliveryReceipt,
@@ -66,6 +68,7 @@ interface ReceiveDraftRow {
     RouterLink,
     TablerIconComponent,
     NihilSelectComponent,
+    TablePagerComponent,
   ],
   templateUrl: './suppliers.page.html',
   styleUrl: './suppliers.page.scss',
@@ -93,6 +96,7 @@ export class SuppliersPage {
   readonly receiptsTodayCount = this.suppliersSvc.receiptsTodayCount;
 
   readonly search = signal('');
+  readonly page = signal(1);
   readonly statusFilter = signal<'all' | SupplierStatus>('all');
   readonly modal = signal<ModalKind>(null);
   readonly saving = signal(false);
@@ -165,6 +169,7 @@ export class SuppliersPage {
         .includes(q);
     });
   });
+  readonly paged = computed(() => pageItems(this.filtered(), this.page()));
 
   readonly detailSupplier = computed(() => {
     const id = this.detailId();

@@ -30,7 +30,31 @@ export class OfflineQueueStore {
     };
 
     const database = await this.open();
-    await this.complete(database.transaction(STORE_NAME, 'readwrite'), (store) => store.add(operation));
+    const transaction = database.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const previous = await this.request<OfflineOperation[]>(store.getAll());
+    const replaceable = request.method === 'PUT' && request.path.startsWith('/api/workspace/');
+    const matching = replaceable
+      ? previous.filter((entry) => entry.status === 'queued' && entry.method === request.method && entry.path === request.path)
+      : [];
+
+    if (matching.length) {
+      // A workspace payload is a complete snapshot. Keep only the newest version
+      // while offline instead of retaining every intermediate edit.
+      const [latest, ...duplicates] = matching;
+      store.put({
+        ...latest,
+        body: operation.body,
+        contentType: operation.contentType,
+        createdAt: operation.createdAt,
+        attempts: 0,
+        lastError: null,
+      });
+      duplicates.forEach((entry) => store.delete(entry.id));
+    } else {
+      store.add(operation);
+    }
+    await this.complete(transaction);
     return operation;
   }
 

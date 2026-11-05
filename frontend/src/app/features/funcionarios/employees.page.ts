@@ -12,6 +12,8 @@ import { RouterLink } from '@angular/router';
 import { EmployeeCatalogService } from '../../core/employees/employee-catalog.service';
 import { EmployeeAccessService } from '../../core/employees/employee-access.service';
 import { ToastService } from '../../core/toast/toast.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { API_BASE_URL } from '../../core/api/api-config';
 import {
   formatMoneyInput,
   moneyToInputText,
@@ -19,6 +21,8 @@ import {
   restoreMoneyCaret,
 } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import {
   Employee,
   EmployeeStatus,
@@ -27,7 +31,7 @@ import {
 
 @Component({
   selector: 'app-employees-page',
-  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent, RouterLink],
+  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent, RouterLink],
   templateUrl: './employees.page.html',
   styleUrl: './employees.page.scss',
 })
@@ -35,6 +39,7 @@ export class EmployeesPage {
   private readonly catalog = inject(EmployeeCatalogService);
   private readonly access = inject(EmployeeAccessService);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
 
   readonly iconPlus = IconPlus;
   readonly iconSearch = IconSearch;
@@ -44,6 +49,7 @@ export class EmployeesPage {
 
   readonly search = signal('');
   readonly statusFilter = signal<'' | EmployeeStatus>('');
+  readonly page = signal(1);
   readonly modal = signal<'form' | null>(null);
   readonly editingId = signal<string | null>(null);
   readonly saving = signal(false);
@@ -57,6 +63,8 @@ export class EmployeesPage {
   readonly formNotes = signal('');
   readonly formAccessEnabled = signal(false);
   readonly formUsername = signal('');
+  readonly formEmail = signal('');
+  readonly formPassword = signal('');
 
   readonly statusFilterOptions: NihilSelectOption[] = [
     { value: '', label: 'Todas as situações' },
@@ -86,6 +94,7 @@ export class EmployeesPage {
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   });
+  readonly paged = computed(() => pageItems(this.filtered(), this.page()));
 
   setSearch(value: string): void {
     this.search.set(value);
@@ -109,6 +118,8 @@ export class EmployeesPage {
     this.formNotes.set('');
     this.formAccessEnabled.set(false);
     this.formUsername.set('');
+    this.formEmail.set('');
+    this.formPassword.set('');
     this.formError.set('');
     this.modal.set('form');
   }
@@ -124,6 +135,8 @@ export class EmployeesPage {
     const access = this.access.findByEmployeeId(emp.id);
     this.formAccessEnabled.set(access?.enabled ?? false);
     this.formUsername.set(access?.username ?? '');
+    this.formEmail.set('');
+    this.formPassword.set('');
     this.formError.set('');
     this.modal.set('form');
   }
@@ -156,7 +169,7 @@ export class EmployeesPage {
     this.formAccessEnabled.set(enabled);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.saving()) return;
     this.saving.set(true);
     this.formError.set('');
@@ -171,7 +184,11 @@ export class EmployeesPage {
         status: this.formStatus(),
         notes: this.formNotes(),
       });
+      const existingAccess = this.access.findByEmployeeId(employee.id);
       if (this.formAccessEnabled() || this.formUsername().trim()) {
+        if (!existingAccess && this.formAccessEnabled()) {
+          await this.createLogin(employee.name);
+        }
         this.access.upsert(employee.id, this.formUsername(), this.formAccessEnabled());
       }
       this.toast.success(this.editingId() ? 'Funcionário atualizado.' : 'Funcionário cadastrado.');
@@ -181,6 +198,19 @@ export class EmployeesPage {
       this.formError.set(err instanceof Error ? err.message : 'Não foi possível salvar.');
       this.saving.set(false);
     }
+  }
+
+  private async createLogin(displayName: string): Promise<void> {
+    const username = this.formUsername().trim();
+    const email = this.formEmail().trim();
+    const password = this.formPassword();
+    if (!username || !email || !password) throw new Error('Informe usuário, e-mail e senha para liberar o acesso.');
+    const response = await fetch(`${API_BASE_URL}/api/users`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${this.auth.token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, displayName }),
+    });
+    if (!response.ok) throw new Error('Não foi possível criar o login. Verifique se usuário ou e-mail já estão em uso.');
   }
 
   deactivate(emp: Employee): void {

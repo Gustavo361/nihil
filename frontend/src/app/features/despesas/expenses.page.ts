@@ -23,6 +23,8 @@ import {
   restoreMoneyCaret,
 } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import { roundMoney } from '../estoque/stock.models';
 import {
   Expense,
@@ -46,7 +48,7 @@ type ModalKind =
 
 @Component({
   selector: 'app-expenses-page',
-  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent],
+  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent],
   templateUrl: './expenses.page.html',
   styleUrl: './expenses.page.scss',
 })
@@ -73,6 +75,7 @@ export class ExpensesPage {
   readonly periodRef = signal(currentMonthRef());
 
   readonly search = signal('');
+  readonly page = signal(1);
   readonly categoryFilter = signal<'' | ExpenseCategory>('');
   readonly statusFilter = signal<'' | ExpenseStatus>('');
 
@@ -321,6 +324,7 @@ export class ExpensesPage {
       })
       .sort((a, b) => b.dueDate.localeCompare(a.dueDate) || b.createdAt.localeCompare(a.createdAt));
   });
+  readonly pagedList = computed(() => pageItems(this.filteredList(), this.page()));
 
   readonly detailExpense = computed(() => {
     const id = this.detailId();

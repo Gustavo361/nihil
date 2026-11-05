@@ -54,16 +54,16 @@ public class SecurityConfig {
 
 	@Bean
 	UserDetailsService userDetailsService(JdbcTemplate jdbc) {
-		return username -> jdbc.query(
-				"select username, password_hash, active from app_user where username = ?",
+		return login -> jdbc.query(
+				"select username, password_hash, active from app_user where username = ? or email = ?",
 				resultSet -> {
 					if (!resultSet.next() || !resultSet.getBoolean("active")) {
-						throw new org.springframework.security.core.userdetails.UsernameNotFoundException(username);
+						throw new org.springframework.security.core.userdetails.UsernameNotFoundException(login);
 					}
 					return User.withUsername(resultSet.getString("username"))
 							.password("{bcrypt}" + resultSet.getString("password_hash"))
 							.authorities("USER")
 							.build();
-				}, username);
+				}, login.toLowerCase(), login.toLowerCase());
 	}
 }

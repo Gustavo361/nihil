@@ -1,0 +1,14 @@
+<div class="table-pager" aria-label="Paginação da tabela">
+  <p>
+    @if (total() === 0) {
+      Nenhum registro
+    } @else {
+      {{ from() }}–{{ to() }} de {{ total() }}
+    }
+  </p>
+  <div class="table-pager__controls">
+    <button type="button" (click)="previous()" [disabled]="currentPage() <= 1">Anterior</button>
+    <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+    <button type="button" (click)="next()" [disabled]="currentPage() >= totalPages()">Próxima</button>
+  </div>
+</div>

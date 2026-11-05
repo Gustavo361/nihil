@@ -35,10 +35,21 @@ export function parseMoneyTyping(raw: string): { text: string; value: number | n
 
   if (!s) return { text: '', value: null };
 
+  const comma = s.indexOf(',');
+  if (comma >= 0) {
+    s = `${groupThousands(s.slice(0, comma))},${s.slice(comma + 1)}`;
+  } else {
+    s = groupThousands(s);
+  }
+
   return {
     text: s,
     value,
   };
+}
+
+function groupThousands(value: string): string {
+  return value.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 /** Parse BRL-ish input into a number (supports 1.234,56 / 1234,56 / 1234.56). */

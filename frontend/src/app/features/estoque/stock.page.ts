@@ -15,7 +15,7 @@ import {
 import { PurchaseCatalogService } from '../../core/purchases/purchase-catalog.service';
 import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
-import { parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
+import { formatMoneyInput, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
 import { isMassUnit } from './stock-units';
 import { STOCK_CATEGORIES, STOCK_UNITS } from './stock.mock';
@@ -338,11 +338,31 @@ export class StockPage {
     restoreMoneyCaret(input, raw, text, caret);
   }
 
+  onMoneyBlur(raw: string): void {
+    const { text, value } = formatMoneyInput(raw);
+    this.unitCostText.set(text);
+    this.unitCost.set(value);
+  }
+
   onMinQtyInput(raw: string): void {
     const cleaned = raw.replace(/[^\d.,]/g, '').replace(',', '.');
     this.minQtyText.set(cleaned.replace('.', ','));
     const value = Number(cleaned);
     this.minQty.set(cleaned && !Number.isNaN(value) ? value : null);
+  }
+
+  onMinQtyFocus(): void {
+    if (this.minQtyText() === '0') {
+      this.minQtyText.set('');
+      this.minQty.set(null);
+    }
+  }
+
+  onMinQtyBlur(): void {
+    if (!this.minQtyText().trim()) {
+      this.minQtyText.set('0');
+      this.minQty.set(0);
+    }
   }
 
   onPackageWeightInput(raw: string): void {

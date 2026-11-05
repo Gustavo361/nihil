@@ -68,7 +68,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (e of filtered(); track e.id) {
+          @for (e of paged(); track e.id) {
             <tr>
               <td>
                 <strong>{{ e.name }}</strong>
@@ -98,6 +98,7 @@
         </tbody>
       </table>
     </div>
+    <app-table-pager [total]="filtered().length" [page]="page()" (pageChange)="page.set($event)" />
   </section>
 </section>
 
@@ -176,8 +177,18 @@
                 [ngModel]="formUsername()"
                 (ngModelChange)="formUsername.set($event)"
               />
-              <small>A senha será criada quando a autenticação segura estiver conectada ao backend.</small>
             </div>
+            @if (!editingId()) {
+              <div class="modal-form__field">
+                <label for="emp-email">E-mail</label>
+                <input id="emp-email" type="email" name="email" autocomplete="email" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" />
+              </div>
+              <div class="modal-form__field">
+                <label for="emp-password">Senha</label>
+                <input id="emp-password" type="password" name="password" autocomplete="new-password" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" />
+                <small>Mínimo de 12 caracteres. O funcionário poderá entrar com usuário ou e-mail.</small>
+              </div>
+            }
           }
         </fieldset>
         @if (formError()) {

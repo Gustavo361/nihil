@@ -12,15 +12,17 @@ import {
 import { PurchaseCatalogService } from '../../core/purchases/purchase-catalog.service';
 import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
-import { moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
+import { formatMoneyInput, moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import { isMassUnit } from '../estoque/stock-units';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../estoque/stock.mock';
 import { Purchase } from './purchases.models';
 
 @Component({
   selector: 'app-purchases-page',
-  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent],
+  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent],
   templateUrl: './purchases.page.html',
   styleUrl: './purchases.page.scss',
 })
@@ -41,6 +43,7 @@ export class PurchasesPage {
   readonly productCount = this.inventory.itemCount;
 
   readonly search = signal('');
+  readonly page = signal(1);
   readonly modalOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly saving = signal(false);
@@ -75,6 +78,7 @@ export class PurchasesPage {
       return `${p.id} ${p.summary} ${p.line.name}`.toLowerCase().includes(q);
     });
   });
+  readonly paged = computed(() => pageItems(this.filtered(), this.page()));
 
   readonly existingHint = computed(() => {
     if (this.isEditing()) return null;
@@ -157,11 +161,31 @@ export class PurchasesPage {
     restoreMoneyCaret(input, raw, text, caret);
   }
 
+  onMoneyBlur(raw: string): void {
+    const { text, value } = formatMoneyInput(raw);
+    this.unitCostText.set(text);
+    this.unitCost.set(value);
+  }
+
   onMinQtyInput(raw: string): void {
     const cleaned = raw.replace(/[^\d.,]/g, '').replace(',', '.');
     this.minQtyText.set(cleaned.replace('.', ','));
     const value = Number(cleaned);
     this.minQty.set(cleaned && !Number.isNaN(value) ? value : null);
+  }
+
+  onMinQtyFocus(): void {
+    if (this.minQtyText() === '0') {
+      this.minQtyText.set('');
+      this.minQty.set(null);
+    }
+  }
+
+  onMinQtyBlur(): void {
+    if (!this.minQtyText().trim()) {
+      this.minQtyText.set('0');
+      this.minQty.set(0);
+    }
   }
 
   onPackageWeightInput(raw: string): void {

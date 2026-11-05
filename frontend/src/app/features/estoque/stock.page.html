@@ -363,6 +363,7 @@
                     inputmode="decimal"
                     [ngModel]="unitCostText()"
                     (ngModelChange)="onMoneyInput($event, confCostInput)"
+                    (blur)="onMoneyBlur(confCostInput.value)"
                     name="confCost"
                   />
                 </div>
@@ -376,6 +377,8 @@
                 inputmode="decimal"
                 [ngModel]="minQtyText()"
                 (ngModelChange)="onMinQtyInput($event)"
+                (focus)="onMinQtyFocus()"
+                (blur)="onMinQtyBlur()"
                 name="confMin"
               />
             </div>
@@ -500,6 +503,7 @@
                 inputmode="decimal"
                 [ngModel]="unitCostText()"
                 (ngModelChange)="onMoneyInput($event, recvCostInput)"
+                (blur)="onMoneyBlur(recvCostInput.value)"
                 name="recvCost"
                 placeholder="0,00"
               />
@@ -515,6 +519,8 @@
             inputmode="decimal"
             [ngModel]="minQtyText()"
             (ngModelChange)="onMinQtyInput($event)"
+            (focus)="onMinQtyFocus()"
+            (blur)="onMinQtyBlur()"
             name="recvMin"
           />
         </div>

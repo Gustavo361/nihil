@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,7 +48,7 @@ public class WorkspaceStateController {
   }
 
   @GetMapping
-  Map<String, JsonNode> readAll() {
+  ResponseEntity<Map<String, JsonNode>> readAll() {
     var result = new LinkedHashMap<String, JsonNode>();
     jdbc.query("select state_key, payload from user_workspace_state where username=?", rs -> {
       try {
@@ -56,7 +57,7 @@ public class WorkspaceStateController {
         throw new IllegalStateException("Estado remoto inválido.", exception);
       }
     }, username());
-    return result;
+    return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").body(result);
   }
 
   @PutMapping("/{key}")

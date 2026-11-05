@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../api/api-config';
 import { ToastService } from '../toast/toast.service';
 
 const KEYS = [
-  'nihil.stock.v2', 'nihil.menu.v1', 'nihil.sales.v1', 'nihil.cash.v1',
+  'nihil.stock.v2', 'nihil.menu-catalog.v1', 'nihil.sales.v1', 'nihil.cash-register.v1',
   'nihil.purchases.v1', 'nihil.expenses.v1', 'nihil.employees.v1',
   'nihil.employee-access.v1', 'nihil.suppliers.v1', 'nihil.payroll.v1',
 ];
@@ -45,6 +45,7 @@ export class RemoteStorageBridgeService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/workspace`, {
         headers: { Authorization: `Basic ${sessionStorage.getItem('nihil.auth.basic') ?? ''}` },
+        cache: 'no-store',
       });
       if (!response.ok) throw new Error('Falha ao carregar estado remoto.');
       const states = await response.json() as Record<string, unknown>;

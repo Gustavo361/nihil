@@ -19,7 +19,11 @@ export const appConfig: ApplicationConfig = {
       const sync = inject(OfflineSyncService);
       sync.start();
     }),
-    provideAppInitializer(() => inject(RemoteStorageBridgeService).install()),
+    provideAppInitializer(() => {
+      const remoteStorage = inject(RemoteStorageBridgeService);
+      remoteStorage.install();
+      return remoteStorage.hydrate();
+    }),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
   ],
 };

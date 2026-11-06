@@ -10,7 +10,6 @@ import {
   roundMoney,
   roundQty,
 } from '../../features/estoque/stock.models';
-import { buildDemoStockItems } from '../../features/estoque/stock.mock';
 import { recipeQtyToStockUnit } from '../../features/estoque/stock-units';
 import type { RecipeMassUnit } from '../../features/estoque/stock.models';
 
@@ -67,8 +66,7 @@ export interface RecipeSaleLineInput {
 
 /**
  * Shared inventory: items, movements, daily ledger.
- * localStorage only until inventory API exists.
- * Seeds demo insumos when storage is empty so Pratos can mount a full recipe.
+ * Uses the persisted inventory state and starts empty until real products are registered.
  */
 @Injectable({ providedIn: 'root' })
 export class StockInventoryService {
@@ -102,38 +100,6 @@ export class StockInventoryService {
    */
   setLastConference(summary: LastConferenceSummary): void {
     this.lastConference.set(summary);
-    this.persist();
-  }
-
-  /** Demo seed for empty storage — temporary until purchases/API are the only source. */
-  private seedDemoInventory(): void {
-    const items = buildDemoStockItems();
-    const dayKey = todayKey();
-    const at = new Date().toISOString();
-    const movements: StockMovement[] = items.map((item, index) => ({
-      id: `demo-mov-${index + 1}`,
-      itemId: item.id,
-      type: 'purchase_in',
-      quantity: item.quantity,
-      unit: item.unit,
-      note: 'Entrada inicial (dados de demonstração)',
-      at,
-      user: 'Administrador',
-      refType: 'purchase',
-      refId: 'demo-seed',
-    }));
-    const day: StockDay = {
-      date: dayKey,
-      lines: items.map((item) => ({
-        itemId: item.id,
-        openingQty: 0,
-        purchasedQty: item.quantity,
-        estimatedOutQty: 0,
-      })),
-    };
-    this.items.set(items);
-    this.movements.set(movements);
-    this.days.set([day]);
     this.persist();
   }
 

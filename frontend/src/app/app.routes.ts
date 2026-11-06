@@ -15,6 +15,7 @@ import { AccessPermissionsPage } from './features/cargos-permissoes/access-permi
 import { LoginPage } from './features/login/login.page';
 import { authGuard } from './core/auth/auth.guard';
 import { SettingsPage } from './features/configuracoes/settings.page';
+import { FinancialReportsPage } from './features/relatorios-financeiros/financial-reports.page';
 
 const comingSoon = (title: string) => ({
   component: ComingSoonPage,
@@ -36,7 +37,7 @@ export const routes: Routes = [
       { path: 'fornecedores', component: SuppliersPage },
       { path: 'caixa', component: CashPage },
       { path: 'despesas', component: ExpensesPage },
-      { path: 'relatorios-financeiros', ...comingSoon('Relatórios financeiros') },
+      { path: 'relatorios-financeiros', component: FinancialReportsPage },
       { path: 'funcionarios', component: EmployeesPage },
       { path: 'folha', component: PayrollPage },
       { path: 'cargos-permissoes', component: AccessPermissionsPage },

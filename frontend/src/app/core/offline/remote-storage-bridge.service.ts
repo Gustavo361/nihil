@@ -62,6 +62,10 @@ export class RemoteStorageBridgeService {
     }
   }
 
+  clear(): void {
+    this.values.clear();
+  }
+
   private async save(key: string, value: string): Promise<void> {
     let payload: unknown;
     try { payload = JSON.parse(value); } catch { return; }

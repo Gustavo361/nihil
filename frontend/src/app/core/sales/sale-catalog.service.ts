@@ -1,5 +1,4 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { SALES_MOCK } from '../../features/vendas/sales.mock';
 import { Sale, SaleCancellation } from '../../features/vendas/sales.models';
 import { roundMoney } from '../../features/estoque/stock.models';
 
@@ -18,13 +17,7 @@ export class SaleCatalogService {
   );
 
   constructor() {
-    const stored = readSales();
-    if (stored) {
-      this.sales.set(stored);
-    } else {
-      this.sales.set([...SALES_MOCK]);
-      this.persist();
-    }
+    this.sales.set(readSales() ?? []);
   }
 
   findById(id: string): Sale | undefined {

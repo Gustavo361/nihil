@@ -15,7 +15,16 @@ export class AuthService {
   constructor(private readonly http: HttpClient, private readonly remoteStorage: RemoteStorageBridgeService) {}
 
   async login(username: string, password: string): Promise<void> {
-    const token = btoa(`${username.trim()}:${password}`);
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername) throw new Error('Informe o usuário.');
+    if (!password) throw new Error('Informe a senha.');
+
+    let token: string;
+    try {
+      token = btoa(`${normalizedUsername}:${password}`);
+    } catch {
+      throw new Error('Usuário ou senha inválidos.');
+    }
     try {
       await firstValueFrom(this.http.get(`${API_BASE_URL}/api/suppliers`, {
         headers: { Authorization: `Basic ${token}` },
@@ -31,7 +40,7 @@ export class AuthService {
     }
     sessionStorage.setItem(AUTH_KEY, token);
     this.token.set(token);
-    this.username.set(username.trim());
+    this.username.set(normalizedUsername);
     // Do not block navigation on the workspace hydration. Render may need to
     // wake the API from sleep; the authenticated shell can open while data
     // continues loading in the background.
@@ -42,6 +51,7 @@ export class AuthService {
     sessionStorage.removeItem(AUTH_KEY);
     this.token.set(null);
     this.username.set(null);
+    this.remoteStorage.clear();
   }
 
   private decodeUsername(token: string | null): string | null {

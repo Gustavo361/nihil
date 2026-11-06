@@ -1,5 +1,4 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { CASH_MOVEMENTS_MOCK, CASH_SESSIONS_MOCK } from '../../features/caixa/cash.mock';
 import {
   CashDrawerTotals,
   CashMovement,
@@ -60,10 +59,9 @@ export class CashRegisterService {
       this.movements.set(stored.movements);
       this.pendingReceipts.set(stored.pendingReceipts);
     } else {
-      this.sessions.set([...CASH_SESSIONS_MOCK]);
-      this.movements.set([...CASH_MOVEMENTS_MOCK]);
+      this.sessions.set([]);
+      this.movements.set([]);
       this.pendingReceipts.set([]);
-      this.persist();
     }
   }
 

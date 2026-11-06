@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IconEye, IconEyeOff, TablerIconComponent } from '@tabler/icons-angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { HealthApiService } from '../../core/api/health-api.service';
 
 @Component({
   selector: 'app-login-page',
@@ -12,6 +13,7 @@ import { AuthService } from '../../core/auth/auth.service';
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
+  private readonly health = inject(HealthApiService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   readonly username = signal('');
@@ -22,12 +24,26 @@ export class LoginPage {
   readonly iconEye = IconEye;
   readonly iconEyeOff = IconEyeOff;
 
+  constructor() {
+    // Wake the Render service while the user is filling in the form instead
+    // of making the first authenticated request absorb the cold-start delay.
+    this.health.getHealth().subscribe({ error: () => undefined });
+  }
+
   togglePasswordVisibility(): void {
     this.passwordVisible.update((visible) => !visible);
   }
 
   async submit(): Promise<void> {
     if (this.busy()) return;
+    if (!this.username().trim()) {
+      this.error.set('Informe o usuário.');
+      return;
+    }
+    if (!this.password()) {
+      this.error.set('Informe a senha.');
+      return;
+    }
     this.busy.set(true);
     this.error.set('');
     try {

@@ -1,19 +1,21 @@
 <section class="dashboard" aria-labelledby="dashboard-title">
   <header class="dashboard__header">
     <div><p class="dashboard__eyebrow">Centro de comando</p><h1 id="dashboard-title">Visão Geral</h1><p class="dashboard__lead">Acompanhe seu restaurante em tempo real.</p></div>
-    <div class="dashboard__live"><span></span> Ao vivo <strong>Hoje · {{ todayLabel }}</strong></div>
+    <div class="dashboard__live"><span></span> Atualização local <strong>{{ range().from }} — {{ range().to }}</strong></div>
   </header>
 
+  <div class="dashboard__filters"><div class="periods"> <button type="button" [class.is-active]="period() === 'today'" (click)="setPeriod('today')">Hoje</button><button type="button" [class.is-active]="period() === '7d'" (click)="setPeriod('7d')">7 dias</button><button type="button" [class.is-active]="period() === '30d'" (click)="setPeriod('30d')">30 dias</button><button type="button" [class.is-active]="period() === 'custom'" (click)="setPeriod('custom')">Personalizado</button></div>@if (period() === 'custom') { <input type="date" [value]="customFrom()" (change)="setCustomFrom($any($event.target).value)" /><input type="date" [value]="customTo()" (change)="setCustomTo($any($event.target).value)" /> }<button class="dashboard__refresh" type="button" (click)="refresh()">Atualizar</button></div>
+
   <div class="dashboard__kpis">
-    <article class="metric-card metric-card--accent"><div class="metric-card__top"><span>Faturamento</span><span class="metric-card__icon"><tabler-icon [icon]="iconReceipt" [size]="19" /></span></div><strong>{{ revenue() | currency: 'BRL' }}</strong><small>vendas confirmadas hoje</small></article>
+    <article class="metric-card metric-card--accent"><div class="metric-card__top"><span>Faturamento</span><span class="metric-card__icon"><tabler-icon [icon]="iconReceipt" [size]="19" /></span></div><strong>{{ revenue() | currency: 'BRL' }}</strong><small>vendas confirmadas · @if (revenueVariation() !== null) { {{ revenueVariation()! | number:'1.1-1' }}% vs. anterior } @else { comparação indisponível }</small></article>
     <article class="metric-card"><div class="metric-card__top"><span>Resultado operacional</span><span class="metric-card__icon"><tabler-icon [icon]="iconTrend" [size]="19" /></span></div><strong class="metric-card__muted">—</strong><small>dados de custos insuficientes</small></article>
-    <article class="metric-card"><div class="metric-card__top"><span>Vendas</span><span class="metric-card__icon"><tabler-icon [icon]="iconCart" [size]="19" /></span></div><strong>{{ saleCount() }}</strong><small>vendas confirmadas hoje</small></article>
+    <article class="metric-card"><div class="metric-card__top"><span>Vendas</span><span class="metric-card__icon"><tabler-icon [icon]="iconCart" [size]="19" /></span></div><strong>{{ saleCount() }}</strong><small>confirmadas no período</small></article>
     <article class="metric-card"><div class="metric-card__top"><span>Ticket médio</span><span class="metric-card__icon"><tabler-icon [icon]="iconCash" [size]="19" /></span></div><strong>{{ averageTicket() | currency: 'BRL' }}</strong><small>por venda confirmada</small></article>
   </div>
 
   <div class="dashboard__main-grid">
     <article class="dashboard-card dashboard-card--chart">
-      <div class="dashboard-card__header"><div><h2>Desempenho de vendas</h2><p>Faturamento por hora · hoje</p></div><div class="chart-actions"><button type="button" (click)="toggleChartMode()">{{ chartMode() === 'area' ? 'Barras' : 'Área' }}</button><button type="button" aria-label="Atualizar gráfico" (click)="refresh()">↻</button></div></div>
+      <div class="dashboard-card__header"><div><h2>Desempenho de vendas</h2><p>Atual · período anterior equivalente</p></div><div class="chart-actions"><button type="button" (click)="toggleChartMode()">{{ chartMode() === 'area' ? 'Barras' : 'Área' }}</button><button type="button" aria-label="Atualizar gráfico" (click)="refresh()">↻</button></div></div>
       <div #salesChart class="echart" aria-label="Gráfico de faturamento por hora"></div>
     </article>
     <article class="dashboard-card">
@@ -31,4 +33,6 @@
   </section>
 
   <div class="dashboard__bottom-grid"><a class="summary-card" routerLink="/compras"><span><tabler-icon [icon]="iconCart" [size]="19" /> Compras hoje</span><strong>{{ purchaseTotal() | currency: 'BRL' }}</strong><small>entradas registradas</small></a><a class="summary-card" routerLink="/despesas"><span><tabler-icon [icon]="iconReceipt" [size]="19" /> Compromissos hoje</span><strong>{{ expensesToday() | currency: 'BRL' }}</strong><small>despesas com vencimento hoje</small></a><div class="summary-card summary-card--neutral"><span><tabler-icon [icon]="iconStock" [size]="19" /> Valor do estoque</span><strong>{{ inventoryValue() | currency: 'BRL' }}</strong><small>estimativa dos itens cadastrados</small></div></div>
+
+  <section class="dashboard__activity"><div class="dashboard__section-title"><div><p class="dashboard__eyebrow">Rastreamento</p><h2>Atividade recente</h2></div><span class="dashboard__section-caption">Últimos eventos disponíveis</span></div>@if (activity().length) { <div class="activity-list">@for (item of activity(); track item.id) { <a [routerLink]="item.route"><span class="activity-dot" [class]="'activity-dot--' + item.kind"></span><span class="activity-list__text"><strong>{{ item.label }}</strong><small>{{ item.at | date:'dd/MM HH:mm' }}</small></span>@if (item.value !== undefined) { <b>{{ item.value | currency:'BRL' }}</b> }</a> }</div> } @else { <div class="activity-empty">Nenhuma atividade registrada no período selecionado.</div> }</section>
 </section>

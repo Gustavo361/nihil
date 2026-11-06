@@ -12,26 +12,38 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController
 @RequestMapping("/api/suppliers")
 public class SupplierController {
   private final SupplierRepository repository;
-  SupplierController(SupplierRepository repository) { this.repository = repository; }
+  private final com.nihil.shared.AuditService audit;
+  private final com.nihil.shared.IdempotencyService idempotency;
+  SupplierController(SupplierRepository repository, com.nihil.shared.AuditService audit,
+      com.nihil.shared.IdempotencyService idempotency) {
+    this.repository = repository; this.audit = audit; this.idempotency = idempotency;
+  }
 
   @GetMapping
   List<SupplierResponse> list() { return repository.findAll().stream().map(SupplierResponse::from).toList(); }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  SupplierResponse create(@Valid @RequestBody SupplierRequest request) {
+  @Transactional
+  SupplierResponse create(@Valid @RequestBody SupplierRequest request,
+      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+    idempotency.claim(idempotencyKey, "supplier.create");
     var now = OffsetDateTime.now();
     var supplier = new Supplier();
     supplier.id = UUID.randomUUID(); supplier.name = request.name().trim(); supplier.documentNumber = blankToNull(request.documentNumber());
     supplier.contactName = blankToNull(request.contactName()); supplier.phone = blankToNull(request.phone());
     supplier.email = blankToNull(request.email()); supplier.notes = blankToNull(request.notes()); supplier.active = true;
     supplier.createdAt = now; supplier.updatedAt = now;
-    return SupplierResponse.from(repository.save(supplier));
+    Supplier saved = repository.save(supplier);
+    audit.success("supplier.create", "supplier", saved.id, "Fornecedor cadastrado");
+    return SupplierResponse.from(saved);
   }
   private static String blankToNull(String value) { return value == null || value.isBlank() ? null : value.trim(); }
   public record SupplierRequest(@NotBlank String name, String documentNumber, String contactName, String phone, String email, String notes) {}

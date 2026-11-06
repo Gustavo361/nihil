@@ -21,7 +21,7 @@
   gap: 10px;
   padding: 12px 14px;
   border-radius: var(--nihil-radius-md);
-  background: #22c78a;
+  background: var(--success);
   border: 1px solid rgba(15, 159, 110, 0.35);
   box-shadow: 0 16px 36px rgba(34, 199, 138, 0.28);
   color: #ffffff;
@@ -40,12 +40,12 @@
 
 .toast--info {
   background: #6729f2;
-  border-color: rgba(103, 41, 242, 0.35);
-  box-shadow: 0 16px 36px rgba(103, 41, 242, 0.28);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .toast--danger {
-  background: #f43f75;
+  background: var(--danger);
   border-color: rgba(244, 63, 117, 0.35);
   box-shadow: 0 16px 36px rgba(244, 63, 117, 0.28);
 }

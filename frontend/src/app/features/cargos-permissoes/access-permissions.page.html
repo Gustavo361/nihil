@@ -28,7 +28,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of rows(); track row.employee.id) {
+          @for (row of pagedRows(); track row.employee.id) {
             <tr>
               <td>
                 <strong>{{ row.employee.name }}</strong>
@@ -100,5 +100,6 @@
         </tbody>
       </table>
     </div>
+    <app-table-pager [total]="rows().length" [page]="page()" (pageChange)="page.set($event)" />
   </section>
 </section>

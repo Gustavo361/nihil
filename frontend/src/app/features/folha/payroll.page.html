@@ -69,7 +69,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (run of runs(); track run.id) {
+            @for (run of pagedRuns(); track run.id) {
               <tr
                 [class.is-selected]="selectedRun()?.id === run.id"
                 (click)="selectRun(run)"
@@ -88,6 +88,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="runs().length" [page]="page()" (pageChange)="page.set($event)" />
     </section>
 
     <section class="panel">
@@ -109,7 +110,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (line of run.lines; track line.employeeId) {
+              @for (line of pagedLines(); track line.employeeId) {
                 <tr>
                   <td>{{ line.employeeName }}</td>
                   <td>{{ line.role }}</td>
@@ -135,6 +136,7 @@
             </tbody>
           </table>
         </div>
+        <app-table-pager [total]="run.lines.length" [page]="linesPage()" (pageChange)="linesPage.set($event)" />
         <p class="detail-total">
           Total: <strong>{{ run.total | currency: 'BRL' }}</strong>
         </p>

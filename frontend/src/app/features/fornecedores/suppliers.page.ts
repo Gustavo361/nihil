@@ -97,6 +97,8 @@ export class SuppliersPage {
 
   readonly search = signal('');
   readonly page = signal(1);
+  readonly detailPage = signal(1);
+  readonly receivePage = signal(1);
   readonly statusFilter = signal<'all' | SupplierStatus>('all');
   readonly modal = signal<ModalKind>(null);
   readonly saving = signal(false);
@@ -127,6 +129,10 @@ export class SuppliersPage {
   readonly schedules = signal<DeliverySchedule[]>([]);
 
   readonly receiveRows = signal<ReceiveDraftRow[]>([]);
+  readonly pagedReceiveRows = computed(() => {
+    const rows = this.receiveRows().map((row, index) => ({ row, index }));
+    return pageItems(rows, this.receivePage());
+  });
   readonly receiveNotes = signal('');
   readonly annulReason = signal('');
   readonly snoozeAtLocal = signal('');
@@ -181,6 +187,7 @@ export class SuppliersPage {
     if (!id) return [];
     return this.suppliersSvc.occurrencesForSupplier(id);
   });
+  readonly pagedDetailOccurrences = computed(() => pageItems(this.detailOccurrences(), this.detailPage()));
 
   readonly receiveSummaryTotal = computed(() => {
     let total = 0;

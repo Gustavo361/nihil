@@ -3,7 +3,7 @@
   padding: var(--nihil-space-2);
   background: var(--nihil-white);
   border-radius: var(--nihil-radius-lg);
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .coming-soon__eyebrow {

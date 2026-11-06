@@ -44,7 +44,7 @@
   color: var(--nihil-text);
   font: inherit;
   line-height: 1.25;
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -53,8 +53,8 @@
 .period-field input[type='date']:focus,
 .period-field input[type='date']:focus-visible {
   outline: none;
-  border-color: rgba(103, 41, 242, 0.35);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .period-field input[type='date']::-webkit-calendar-picker-indicator {
@@ -89,7 +89,7 @@
   background: linear-gradient(90deg, var(--nihil-purple), var(--nihil-purple-2));
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(103, 41, 242, 0.25);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .sales__cta:hover:not(:disabled) {
@@ -102,7 +102,7 @@
 }
 
 .sales__cta--danger {
-  background: linear-gradient(90deg, #e11d48, #f43f75);
+  background: linear-gradient(90deg, #e11d48, var(--danger));
   box-shadow: 0 10px 24px rgba(244, 63, 117, 0.25);
 }
 
@@ -128,7 +128,7 @@
   padding: var(--nihil-space-3) var(--nihil-space-2);
   background: var(--nihil-white);
   border-radius: var(--nihil-radius-md);
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .kpi__icon {
@@ -173,7 +173,7 @@
 .detail {
   background: var(--nihil-white);
   border-radius: var(--nihil-radius-md);
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .panel {
@@ -210,8 +210,8 @@
 }
 
 .field:focus-within {
-  border-color: rgba(103, 41, 242, 0.35);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .field input,
@@ -271,7 +271,7 @@
 }
 
 .search-clear:hover {
-  background: rgba(48, 45, 80, 0.08);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   color: var(--nihil-text);
 }
 
@@ -288,7 +288,7 @@
 .table td {
   padding: 14px 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(48, 45, 80, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
   white-space: nowrap;
 }
 
@@ -327,7 +327,7 @@
 
 .badge[data-status='confirmed'] {
   background: rgba(34, 199, 138, 0.12);
-  color: #0f9f6e;
+  color: var(--success);
 }
 
 .badge[data-status='cancelled'] {
@@ -336,7 +336,7 @@
 }
 
 .amount--in {
-  color: #0f9f6e;
+  color: var(--success);
   font-weight: 700;
 }
 
@@ -387,7 +387,7 @@
   flex-wrap: wrap;
   margin-top: var(--nihil-space-2);
   padding-top: var(--nihil-space-2);
-  border-top: 1px solid rgba(48, 45, 80, 0.06);
+  border-top: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
 }
 
 .pager__summary,
@@ -556,7 +556,7 @@
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(48, 45, 80, 0.4);
+  background: color-mix(in srgb, #000 40%, transparent);
   cursor: default;
 }
 
@@ -610,7 +610,7 @@
   align-items: flex-start;
   gap: 6px;
   text-align: left;
-  border: 1px solid rgba(48, 45, 80, 0.1);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
   border-radius: var(--nihil-radius-sm);
   padding: 16px;
   background: var(--nihil-surface);
@@ -620,7 +620,7 @@
 
 .modality-card:hover {
   border-color: transparent;
-  background: rgba(103, 41, 242, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--nihil-purple);
 }
 
@@ -657,7 +657,7 @@
 .money-field {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   border-radius: var(--nihil-radius-sm);
   padding: 0 12px;
   background: var(--nihil-surface);
@@ -672,8 +672,8 @@
 .modal-form__field > input:focus,
 .modal-form__field > input:focus-visible {
   outline: none;
-  border-color: rgba(103, 41, 242, 0.45);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .money-field {
@@ -699,8 +699,8 @@
 }
 
 .money-field:focus-within {
-  border-color: rgba(103, 41, 242, 0.45);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .modal-form__hint,
@@ -745,14 +745,14 @@
   min-height: 44px;
   padding: 0 12px;
   border-radius: var(--nihil-radius-sm);
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   background: var(--nihil-surface);
   color: var(--nihil-muted);
 }
 
 .suggest:focus-within {
-  border-color: rgba(103, 41, 242, 0.35);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .suggest input {
@@ -769,7 +769,7 @@
   list-style: none;
   border-radius: var(--nihil-radius-sm);
   background: var(--nihil-white);
-  border: 1px solid rgba(48, 45, 80, 0.06);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
   box-shadow: 0 12px 28px rgba(48, 45, 80, 0.16);
   overflow: auto;
 }
@@ -796,7 +796,7 @@
 }
 
 .suggest__list button:hover {
-  background: rgba(103, 41, 242, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .suggest__list span {
@@ -810,7 +810,7 @@
   gap: 6px;
   padding: 10px 12px;
   border-radius: var(--nihil-radius-sm);
-  background: rgba(103, 41, 242, 0.06);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .suggest__empty p {
@@ -932,7 +932,7 @@
   justify-content: center;
   min-height: 44px;
   border-radius: var(--nihil-radius-sm);
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   background: var(--nihil-surface);
   color: var(--nihil-text);
   font-weight: 600;
@@ -944,10 +944,10 @@
 }
 
 .pay-grid label.is-active {
-  border-color: rgba(103, 41, 242, 0.45);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   background: var(--nihil-white);
   color: var(--nihil-purple);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .pay-grid input {

@@ -124,7 +124,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of dayRows(); track row.item.id) {
+            @for (row of pagedDayRows(); track row.item.id) {
               <tr
                 [class.table__row--active]="selectedId() === row.item.id"
                 (click)="selectItem(row.item)"
@@ -170,6 +170,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="dayRows().length" [page]="page()" (pageChange)="page.set($event)" />
     </section>
 
     @if (selectedItem(); as item) {
@@ -264,7 +265,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of conferenceRows(); track row.item.id) {
+            @for (row of pagedConferenceRows(); track row.item.id) {
               <tr>
                 <td>
                   <strong>{{ row.item.name }}</strong>
@@ -293,6 +294,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="conferenceRows().length" [page]="conferencePage()" (pageChange)="conferencePage.set($event)" />
 
       <div class="conf-new">
         <button type="button" class="link-btn" (click)="toggleConfNew()">

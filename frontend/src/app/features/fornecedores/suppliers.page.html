@@ -447,7 +447,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (o of detailOccurrences(); track o.id) {
+            @for (o of pagedDetailOccurrences(); track o.id) {
               <tr>
                 <td>{{ o.plannedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td><span class="badge" [attr.data-status]="o.status">{{ statusLabel(o.status) }}</span></td>
@@ -476,6 +476,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="detailOccurrences().length" [page]="detailPage()" (pageChange)="detailPage.set($event)" />
 
       <div class="modal-form__actions modal-form__actions--detail">
         <button type="button" class="suppliers__cta" (click)="openEdit(supplier)">Editar</button>
@@ -513,7 +514,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of receiveRows(); track row.stockItemId; let i = $index) {
+            @for (entry of pagedReceiveRows(); track entry.row.stockItemId) {
+              @let row = entry.row;
+              @let i = entry.index;
               <tr>
                 <td>
                   <input type="checkbox" [checked]="row.received" (change)="toggleReceiveRow(i, $any($event.target).checked)" />
@@ -554,6 +557,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="receiveRows().length" [page]="receivePage()" (pageChange)="receivePage.set($event)" />
 
       <div class="modal-form__after-table">
         <div class="modal-form__field">

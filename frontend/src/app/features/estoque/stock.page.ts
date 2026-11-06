@@ -17,6 +17,8 @@ import { StockInventoryService } from '../../core/stock/stock-inventory.service'
 import { ToastService } from '../../core/toast/toast.service';
 import { formatMoneyInput, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import { isMassUnit } from './stock-units';
 import { STOCK_CATEGORIES, STOCK_UNITS } from './stock.mock';
 import {
@@ -40,7 +42,7 @@ interface DayRow {
 
 @Component({
   selector: 'app-stock-page',
-  imports: [FormsModule, CurrencyPipe, DecimalPipe, TablerIconComponent, NihilSelectComponent],
+  imports: [FormsModule, CurrencyPipe, DecimalPipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent],
   templateUrl: './stock.page.html',
   styleUrl: './stock.page.scss',
 })
@@ -66,6 +68,8 @@ export class StockPage {
   readonly category = signal('');
   readonly status = signal<'' | StockStatus>('');
   readonly selectedId = signal<string | null>(null);
+  readonly page = signal(1);
+  readonly conferencePage = signal(1);
 
   readonly modal = signal<StockModal>(null);
   readonly saving = signal(false);
@@ -149,6 +153,7 @@ export class StockPage {
       })
       .sort((a, b) => a.item.name.localeCompare(b.item.name, 'pt-BR'));
   });
+  readonly pagedDayRows = computed(() => pageItems(this.dayRows(), this.page()));
 
   /** All products for conference modal (unfiltered by search). */
   readonly conferenceRows = computed((): DayRow[] => {
@@ -175,6 +180,7 @@ export class StockPage {
       })
       .sort((a, b) => a.item.name.localeCompare(b.item.name, 'pt-BR'));
   });
+  readonly pagedConferenceRows = computed(() => pageItems(this.conferenceRows(), this.conferencePage()));
 
   readonly indicators = computed(() => {
     const all = this.items();

@@ -169,7 +169,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (move of sessionMovements(); track move.id) {
+              @for (move of pagedMovements(); track move.id) {
                 <tr>
                   <td>{{ move.at | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td>{{ movementTypeLabel(move.type) }}</td>
@@ -187,6 +187,7 @@
             </tbody>
           </table>
         </div>
+        <app-table-pager [total]="sessionMovements().length" [page]="movementsPage()" (pageChange)="movementsPage.set($event)" />
       }
     }
 
@@ -227,7 +228,7 @@
                   </td>
                 </tr>
               }
-              @for (session of closedSessions(); track session.id) {
+              @for (session of pagedClosedSessions(); track session.id) {
                 <tr>
                   <td>{{ session.id }}</td>
                   <td>{{ session.openedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
@@ -248,6 +249,7 @@
             </tbody>
           </table>
         </div>
+        <app-table-pager [total]="closedSessions().length + (openSession() ? 1 : 0)" [page]="sessionsPage()" [pageSize]="sessionPageSize()" (pageChange)="sessionsPage.set($event)" />
       }
     }
   </section>
@@ -467,7 +469,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (move of detailMovements(); track move.id) {
+            @for (move of pagedDetailMovements(); track move.id) {
               <tr>
                 <td>{{ move.at | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td>{{ movementTypeLabel(move.type) }}</td>
@@ -489,6 +491,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="detailMovements().length" [page]="detailPage()" (pageChange)="detailPage.set($event)" />
 
       <div class="modal-form__actions">
         <button type="button" class="ghost-btn ghost-btn--danger" (click)="closeModal()">Fechar</button>

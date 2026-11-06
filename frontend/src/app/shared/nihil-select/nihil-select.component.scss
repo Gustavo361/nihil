@@ -33,14 +33,14 @@
 }
 
 .nihil-select--form .nihil-select__trigger {
-  border-color: rgba(48, 45, 80, 0.12);
+  border-color: var(--border);
 }
 
 .nihil-select.is-open .nihil-select__trigger,
 .nihil-select__trigger:focus-visible {
   outline: none;
-  border-color: rgba(103, 41, 242, 0.35);
-  box-shadow: 0 0 0 3px rgba(103, 41, 242, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .nihil-select__value {
@@ -74,7 +74,7 @@
   list-style: none;
   border-radius: var(--nihil-radius-md);
   background: var(--nihil-white);
-  border: 1px solid rgba(48, 45, 80, 0.06);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
   box-shadow: 0 16px 36px rgba(48, 45, 80, 0.16);
   max-height: min(70vh, calc(100vh - 8px));
   overflow: auto;
@@ -101,7 +101,7 @@
 }
 
 .nihil-select__option.is-active {
-  background: rgba(103, 41, 242, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--nihil-purple);
 }
 

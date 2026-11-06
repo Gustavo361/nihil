@@ -77,7 +77,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (dish of filteredDishes(); track dish.id) {
+            @for (dish of pagedDishes(); track dish.id) {
               <tr
                 [class.table__row--active]="selectedId() === dish.id"
                 (click)="selectDish(dish)"
@@ -121,6 +121,7 @@
           </tbody>
         </table>
       </div>
+      <app-table-pager [total]="filteredDishes().length" [page]="page()" (pageChange)="page.set($event)" />
     </section>
 
     @if (selectedDish(); as dish) {

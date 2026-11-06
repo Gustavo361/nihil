@@ -3,10 +3,12 @@ import { RouterLink } from '@angular/router';
 import { EmployeeAccessService, EmployeePermission, employeePermissionOptions } from '../../core/employees/employee-access.service';
 import { EmployeeCatalogService } from '../../core/employees/employee-catalog.service';
 import { ToastService } from '../../core/toast/toast.service';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 
 @Component({
   selector: 'app-access-permissions-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TablePagerComponent],
   templateUrl: './access-permissions.page.html',
   styleUrl: './access-permissions.page.scss',
 })
@@ -17,6 +19,7 @@ export class AccessPermissionsPage {
 
   readonly permissionOptions = employeePermissionOptions;
   readonly selectionByEmployee = signal<Record<string, string>>({});
+  readonly page = signal(1);
 
   readonly rows = computed(() =>
     this.employees
@@ -25,6 +28,7 @@ export class AccessPermissionsPage {
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
       .map((employee) => ({ employee, access: this.access.findByEmployeeId(employee.id) })),
   );
+  readonly pagedRows = computed(() => pageItems(this.rows(), this.page()));
 
   permissionLabel(permission: EmployeePermission): string {
     return this.permissionOptions.find((option) => option.value === permission)?.label ?? permission;

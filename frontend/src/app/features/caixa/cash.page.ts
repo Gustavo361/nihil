@@ -14,6 +14,8 @@ import {
 import { CashRegisterService } from '../../core/cash/cash-register.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { formatMoneyInput, moneyToInputText, parseMoneyTyping, restoreMoneyCaret } from '../../shared/money-input';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import {
   CashMovement,
   CashMovementType,
@@ -27,7 +29,7 @@ type CashModal = 'open' | 'bleed' | 'supply' | 'close' | 'session-detail' | null
 
 @Component({
   selector: 'app-cash-page',
-  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent],
+  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, TablePagerComponent],
   templateUrl: './cash.page.html',
   styleUrl: './cash.page.scss',
 })
@@ -52,6 +54,9 @@ export class CashPage {
   readonly drawer = this.cashRegister.openDrawer;
 
   readonly tab = signal<CashTab>('movements');
+  readonly movementsPage = signal(1);
+  readonly sessionsPage = signal(1);
+  readonly detailPage = signal(1);
   readonly modal = signal<CashModal>(null);
   readonly saving = signal(false);
   readonly formError = signal('');
@@ -84,11 +89,17 @@ export class CashPage {
     if (!session) return [] as CashMovement[];
     return this.cashRegister.movementsFor(session.id);
   });
+  readonly pagedMovements = computed(() => pageItems(this.sessionMovements(), this.movementsPage()));
+  readonly pagedDetailMovements = computed(() => pageItems(this.detailMovements(), this.detailPage()));
 
   readonly closedSessions = computed(() =>
     this.sessions()
       .filter((s) => s.status === 'closed')
       .sort((a, b) => b.openedAt.localeCompare(a.openedAt)),
+  );
+  readonly sessionPageSize = computed(() => this.openSession() ? 19 : 20);
+  readonly pagedClosedSessions = computed(() =>
+    pageItems(this.closedSessions(), this.sessionsPage(), this.sessionPageSize()),
   );
 
   readonly referenceDate = computed(() => {

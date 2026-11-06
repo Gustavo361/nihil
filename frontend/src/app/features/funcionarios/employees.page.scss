@@ -45,7 +45,7 @@
   background: linear-gradient(90deg, var(--nihil-purple), var(--nihil-purple-2));
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(103, 41, 242, 0.25);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .employees__cta:disabled {
@@ -56,8 +56,8 @@
 .notice {
   padding: 12px 16px;
   border-radius: var(--nihil-radius-sm);
-  background: rgba(103, 41, 242, 0.08);
-  border: 1px solid rgba(103, 41, 242, 0.14);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .notice p {
@@ -84,7 +84,7 @@
   padding: var(--nihil-space-3) var(--nihil-space-2);
   background: var(--nihil-white);
   border-radius: var(--nihil-radius-md);
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .kpi__icon {
@@ -107,7 +107,7 @@
   padding: var(--nihil-space-2);
   background: var(--nihil-white);
   border-radius: var(--nihil-radius-md);
-  box-shadow: 0 8px 24px rgba(48, 45, 80, 0.04);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
   display: flex;
   flex-direction: column;
   gap: var(--nihil-space-2);
@@ -125,7 +125,7 @@
   gap: 8px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   border-radius: var(--nihil-radius-sm);
   background: var(--nihil-surface);
   min-width: 0;
@@ -167,7 +167,7 @@
 .table td {
   padding: 12px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(48, 45, 80, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
   vertical-align: top;
 }
 
@@ -213,7 +213,7 @@
 }
 
 .badge[data-status='inactive'] {
-  background: rgba(48, 45, 80, 0.1);
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
   color: var(--nihil-muted);
 }
 
@@ -244,7 +244,7 @@
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(48, 45, 80, 0.4);
+  background: color-mix(in srgb, #000 40%, transparent);
 }
 
 .modal__card {
@@ -303,7 +303,7 @@
 .modal-form__field > input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   border-radius: var(--nihil-radius-sm);
   padding: 0 12px;
   background: var(--nihil-surface);
@@ -317,7 +317,7 @@
   gap: 10px;
   margin: 0;
   padding: 12px;
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   border-radius: var(--nihil-radius-sm);
 }
 
@@ -347,7 +347,7 @@
 
 .modal-form__error {
   margin: 0;
-  color: #c9184a;
+  color: var(--danger);
   font-weight: 600;
 }
 
@@ -358,7 +358,7 @@
 }
 
 .ghost-btn {
-  border: 1px solid rgba(48, 45, 80, 0.12);
+  border: 1px solid var(--border);
   border-radius: var(--nihil-radius-sm);
   padding: 12px 16px;
   background: transparent;

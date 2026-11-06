@@ -19,11 +19,13 @@ import {
   restoreMoneyCaret,
 } from '../../shared/money-input';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import { PayrollRun, payrollStatusLabel } from './payroll.models';
 
 @Component({
   selector: 'app-payroll-page',
-  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent, RouterLink],
+  imports: [FormsModule, CurrencyPipe, DatePipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent, RouterLink],
   templateUrl: './payroll.page.html',
   styleUrl: './payroll.page.scss',
 })
@@ -39,6 +41,8 @@ export class PayrollPage {
   readonly statusLabel = payrollStatusLabel;
 
   readonly monthRef = signal(currentMonthRef());
+  readonly page = signal(1);
+  readonly linesPage = signal(1);
   readonly selectedId = signal<string | null>(null);
   readonly saving = signal(false);
   readonly formError = signal('');
@@ -64,12 +68,14 @@ export class PayrollPage {
       .slice()
       .sort((a, b) => b.periodMonth.localeCompare(a.periodMonth)),
   );
+  readonly pagedRuns = computed(() => pageItems(this.runs(), this.page()));
 
   readonly selectedRun = computed(() => {
     const id = this.selectedId();
     if (id) return this.payroll.findById(id) ?? null;
     return this.payroll.findByMonth(this.monthRef()) ?? null;
   });
+  readonly pagedLines = computed(() => pageItems(this.selectedRun()?.lines ?? [], this.linesPage()));
 
   setMonth(value: string): void {
     this.monthRef.set(value);

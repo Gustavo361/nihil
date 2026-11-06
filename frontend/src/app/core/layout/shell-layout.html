@@ -105,19 +105,14 @@
           <button
             type="button"
             class="shell__action-trigger"
-            title="Modo de exibição"
-            aria-label="Modo de exibição"
+            title="Selecionar tema"
+            aria-label="Selecionar tema"
             [attr.aria-expanded]="openHeaderMenu() === 'theme'"
             aria-haspopup="true"
             (click)="toggleHeaderMenu('theme', $event)"
           >
             <span class="shell__action">
-              <tabler-icon
-                [icon]="themeMode() === 'dark' ? iconTheme : iconSun"
-                [size]="20"
-                [stroke]="1.75"
-                aria-hidden="true"
-              />
+              <tabler-icon [icon]="iconTheme" [size]="20" [stroke]="1.75" aria-hidden="true" />
             </span>
             <tabler-icon
               class="shell__action-chevron"
@@ -129,30 +124,36 @@
           </button>
 
           @if (openHeaderMenu() === 'theme') {
-            <div class="shell__dropdown shell__dropdown--theme" role="menu" aria-label="Modo de exibição">
-              <p class="shell__dropdown-title">Modo</p>
-              <button
-                type="button"
-                class="shell__dropdown-item"
-                role="menuitemradio"
-                [attr.aria-checked]="themeMode() === 'light'"
-                [class.is-active]="themeMode() === 'light'"
-                (click)="setTheme('light')"
-              >
-                <tabler-icon [icon]="iconSun" [size]="18" [stroke]="1.75" aria-hidden="true" />
-                Claro
-              </button>
-              <button
-                type="button"
-                class="shell__dropdown-item"
-                role="menuitemradio"
-                [attr.aria-checked]="themeMode() === 'dark'"
-                [class.is-active]="themeMode() === 'dark'"
-                (click)="setTheme('dark')"
-              >
-                <tabler-icon [icon]="iconTheme" [size]="18" [stroke]="1.75" aria-hidden="true" />
-                Escuro
-              </button>
+            <div class="shell__dropdown shell__dropdown--theme" role="menu" aria-label="Selecionar tema">
+              <p class="shell__dropdown-title">Tema</p>
+              @for (theme of themes; track theme.id) {
+                <button
+                  type="button"
+                  class="shell__dropdown-item shell__theme-option"
+                  role="menuitemradio"
+                  [attr.aria-checked]="themeId() === theme.id"
+                  [class.is-active]="themeId() === theme.id"
+                  (click)="setTheme(theme.id)"
+                >
+                  <span
+                    class="shell__theme-preview"
+                    [style.--preview-background]="theme.background"
+                    [style.--preview-surface]="theme.surface"
+                    [style.--preview-accent]="theme.accent"
+                    [style.--preview-text]="theme.text"
+                    aria-hidden="true"
+                  >
+                    <i class="shell__theme-preview-sidebar"></i>
+                    <i class="shell__theme-preview-card shell__theme-preview-card--one"></i>
+                    <i class="shell__theme-preview-card shell__theme-preview-card--two"></i>
+                    <i class="shell__theme-preview-line"></i>
+                  </span>
+                  <span>{{ theme.name }}</span>
+                  @if (themeId() === theme.id) {
+                    <tabler-icon class="shell__theme-check" [icon]="iconCheck" [size]="16" [stroke]="2.25" aria-hidden="true" />
+                  }
+                </button>
+              }
             </div>
           }
         </div>

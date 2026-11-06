@@ -6,10 +6,10 @@ import {
   IconBell,
   IconChevronDown,
   IconChevronUp,
+  IconCheck,
   IconLayoutDashboard,
   IconMenu2,
-  IconMoon,
-  IconSun,
+  IconPalette,
   IconX,
   TablerIconComponent,
   type TablerIcon,
@@ -18,6 +18,7 @@ import { filter, map, startWith } from 'rxjs';
 import { SupplierCatalogService } from '../suppliers/supplier-catalog.service';
 import { ToastHostComponent } from '../toast/toast-host.component';
 import { ToastService } from '../toast/toast.service';
+import { ThemeId, ThemeService } from '../theme/theme.service';
 import { AppSidebar } from './app-sidebar';
 import { NIHIL_NAV_GROUPS } from './nav.config';
 
@@ -34,19 +35,21 @@ export class ShellLayout implements OnDestroy {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly suppliers = inject(SupplierCatalogService);
   private readonly toast = inject(ToastService);
+  private readonly theme = inject(ThemeService);
   private readonly reminderTimer: number;
 
   readonly menuOpen = signal(false);
   readonly openHeaderMenu = signal<HeaderMenu>(null);
-  readonly themeMode = signal<'light' | 'dark'>('light');
+  readonly themes = this.theme.themes;
+  readonly themeId = this.theme.themeId;
 
   readonly deliveryReminders = this.suppliers.dueReminders;
 
   readonly iconMenu = IconMenu2;
   readonly iconClose = IconX;
   readonly iconBell = IconBell;
-  readonly iconTheme = IconMoon;
-  readonly iconSun = IconSun;
+  readonly iconTheme = IconPalette;
+  readonly iconCheck = IconCheck;
   readonly iconChevronDown = IconChevronDown;
   readonly iconChevronUp = IconChevronUp;
 
@@ -131,9 +134,8 @@ export class ShellLayout implements OnDestroy {
     this.openHeaderMenu.set(null);
   }
 
-  setTheme(mode: 'light' | 'dark'): void {
-    this.themeMode.set(mode);
-    // Placeholder until theme tokens/switcher are wired.
+  setTheme(theme: ThemeId): void {
+    this.theme.setTheme(theme);
     this.closeHeaderMenus();
   }
 

@@ -14,6 +14,8 @@ import { MenuCatalogService } from '../../core/menu/menu-catalog.service';
 import { StockInventoryService } from '../../core/stock/stock-inventory.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { NihilSelectComponent, NihilSelectOption } from '../../shared/nihil-select/nihil-select.component';
+import { TablePagerComponent } from '../../shared/table-pager/table-pager.component';
+import { pageItems } from '../../shared/table-pager/table-pagination';
 import { formatStockQty, recipeCompatible, recipeLineCost, recipeQtyToStockUnit } from '../estoque/stock-units';
 import {
   DishRecipeLine,
@@ -26,7 +28,7 @@ type MenuModal = 'form' | 'detail' | null;
 
 @Component({
   selector: 'app-menu-page',
-  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent],
+  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent],
   templateUrl: './menu.page.html',
   styleUrl: './menu.page.scss',
 })
@@ -50,6 +52,7 @@ export class MenuPage {
 
   readonly search = signal('');
   readonly statusFilter = signal<'' | DishStatus>('');
+  readonly page = signal(1);
   readonly selectedId = signal<string | null>(null);
 
   readonly modal = signal<MenuModal>(null);
@@ -96,6 +99,7 @@ export class MenuPage {
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   });
+  readonly pagedDishes = computed(() => pageItems(this.filteredDishes(), this.page()));
 
   readonly selectedDish = computed(() => {
     const id = this.selectedId();

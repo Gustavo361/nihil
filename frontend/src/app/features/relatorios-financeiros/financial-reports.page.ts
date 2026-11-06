@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, PercentPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IconChartLine, IconDownload, IconFileAnalytics, IconWallet, TablerIconComponent } from '@tabler/icons-angular';
@@ -12,7 +12,7 @@ type Tab = 'performance' | 'dre' | 'cashflow';
 
 @Component({
   selector: 'app-financial-reports-page',
-  imports: [CurrencyPipe, DatePipe, PercentPipe, RouterLink, TablerIconComponent],
+  imports: [CurrencyPipe, DatePipe, RouterLink, TablerIconComponent],
   templateUrl: './financial-reports.page.html',
   styleUrl: './financial-reports.page.scss',
 })

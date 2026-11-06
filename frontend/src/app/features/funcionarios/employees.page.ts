@@ -10,7 +10,6 @@ import {
   IconX,
   TablerIconComponent,
 } from '@tabler/icons-angular';
-import { RouterLink } from '@angular/router';
 import { EmployeeCatalogService } from '../../core/employees/employee-catalog.service';
 import { EmployeeAccessService } from '../../core/employees/employee-access.service';
 import { ToastService } from '../../core/toast/toast.service';
@@ -33,7 +32,7 @@ import {
 
 @Component({
   selector: 'app-employees-page',
-  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent, RouterLink],
+  imports: [FormsModule, CurrencyPipe, TablerIconComponent, NihilSelectComponent, TablePagerComponent],
   templateUrl: './employees.page.html',
   styleUrl: './employees.page.scss',
 })

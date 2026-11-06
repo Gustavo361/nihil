@@ -13,14 +13,12 @@
 
   <div class="dashboard__main-grid">
     <article class="dashboard-card dashboard-card--chart">
-      <div class="dashboard-card__header"><div><h2>Desempenho de vendas</h2><p>Faturamento por hora · hoje</p></div><tabler-icon [icon]="iconChart" [size]="21" /></div>
-      <div class="bar-chart" aria-label="Faturamento por hora">
-        @for (point of salesByHour(); track point.label) { <div class="bar-chart__column"><span class="bar-chart__value">{{ point.value ? (point.value | currency: 'BRL':'symbol':'1.0-0') : '' }}</span><i [style.height.%]="point.height"></i><small>{{ point.label }}</small></div> }
-      </div>
+      <div class="dashboard-card__header"><div><h2>Desempenho de vendas</h2><p>Faturamento por hora · hoje</p></div><div class="chart-actions"><button type="button" (click)="toggleChartMode()">{{ chartMode() === 'area' ? 'Barras' : 'Área' }}</button><button type="button" aria-label="Atualizar gráfico" (click)="refresh()">↻</button></div></div>
+      <div #salesChart class="echart" aria-label="Gráfico de faturamento por hora"></div>
     </article>
     <article class="dashboard-card">
       <div class="dashboard-card__header"><div><h2>Modalidades</h2><p>Distribuição das vendas confirmadas</p></div><tabler-icon [icon]="iconChart" [size]="21" /></div>
-      <div class="modality-list">@for (item of topModalities(); track item.label) { <div class="modality"><div><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div><div class="modality__track"><i [style.width.%]="saleCount() ? (item.value / saleCount()) * 100 : 0"></i></div></div> }</div>
+      <div #modalityChart class="echart echart--donut" aria-label="Gráfico de vendas por modalidade"></div>
     </article>
   </div>
 

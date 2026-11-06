@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nihil-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: dist/nihil-app/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

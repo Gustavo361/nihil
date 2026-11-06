@@ -42,9 +42,14 @@ export class RemoteStorageBridgeService {
   }
 
   async hydrate(): Promise<void> {
+    // The app starts before login. Workspace is protected by the API, so do not
+    // make an unauthenticated request during Angular's initializers.
+    const token = sessionStorage.getItem('nihil.auth.basic');
+    if (!token) return;
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/workspace`, {
-        headers: { Authorization: `Basic ${sessionStorage.getItem('nihil.auth.basic') ?? ''}` },
+        headers: { Authorization: `Basic ${token}` },
         cache: 'no-store',
       });
       if (!response.ok) throw new Error('Falha ao carregar estado remoto.');

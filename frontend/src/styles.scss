@@ -68,6 +68,12 @@
   --success: #79d9ae; --success-soft: rgba(121, 217, 174, 0.16); --warning: #edbd7a; --warning-soft: rgba(237, 189, 122, 0.16); --danger: #ff9ba9; --shadow: rgba(0, 0, 0, 0.45);
 }
 
+:root[data-theme='dusk'],
+:root[data-theme='midnight'],
+:root[data-theme='obsidian'] {
+  color-scheme: dark;
+}
+
 :root {
   --nihil-purple: var(--accent); --nihil-purple-2: var(--accent-strong); --nihil-text: var(--text-primary); --nihil-muted: var(--text-secondary);
   --nihil-sidebar-bg: var(--surface); --nihil-surface: var(--background); --nihil-white: var(--surface); --nihil-danger: var(--danger); --nihil-success: var(--success);
@@ -129,6 +135,29 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  color: var(--text-primary);
+  background-color: var(--surface);
+  caret-color: var(--accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.78;
+}
+
+option {
+  color: var(--text-primary);
+  background-color: var(--surface);
 }
 
 a {

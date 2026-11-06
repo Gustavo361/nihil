@@ -1,5 +1,36 @@
-<section class="home">
-  <p class="brand">Nihil</p>
-  <h1>Gestão interna do restaurante</h1>
-  <p class="lead">Fundação do frontend pronta. Módulos de negócio virão nas próximas etapas.</p>
+<section class="dashboard" aria-labelledby="dashboard-title">
+  <header class="dashboard__header">
+    <div><p class="dashboard__eyebrow">Centro de comando</p><h1 id="dashboard-title">Visão Geral</h1><p class="dashboard__lead">Acompanhe seu restaurante em tempo real.</p></div>
+    <div class="dashboard__live"><span></span> Ao vivo <strong>Hoje · {{ todayLabel }}</strong></div>
+  </header>
+
+  <div class="dashboard__kpis">
+    <article class="metric-card metric-card--accent"><div class="metric-card__top"><span>Faturamento</span><span class="metric-card__icon"><tabler-icon [icon]="iconReceipt" [size]="19" /></span></div><strong>{{ revenue() | currency: 'BRL' }}</strong><small>vendas confirmadas hoje</small></article>
+    <article class="metric-card"><div class="metric-card__top"><span>Resultado operacional</span><span class="metric-card__icon"><tabler-icon [icon]="iconTrend" [size]="19" /></span></div><strong class="metric-card__muted">—</strong><small>dados de custos insuficientes</small></article>
+    <article class="metric-card"><div class="metric-card__top"><span>Vendas</span><span class="metric-card__icon"><tabler-icon [icon]="iconCart" [size]="19" /></span></div><strong>{{ saleCount() }}</strong><small>vendas confirmadas hoje</small></article>
+    <article class="metric-card"><div class="metric-card__top"><span>Ticket médio</span><span class="metric-card__icon"><tabler-icon [icon]="iconCash" [size]="19" /></span></div><strong>{{ averageTicket() | currency: 'BRL' }}</strong><small>por venda confirmada</small></article>
+  </div>
+
+  <div class="dashboard__main-grid">
+    <article class="dashboard-card dashboard-card--chart">
+      <div class="dashboard-card__header"><div><h2>Desempenho de vendas</h2><p>Faturamento por hora · hoje</p></div><tabler-icon [icon]="iconChart" [size]="21" /></div>
+      <div class="bar-chart" aria-label="Faturamento por hora">
+        @for (point of salesByHour(); track point.label) { <div class="bar-chart__column"><span class="bar-chart__value">{{ point.value ? (point.value | currency: 'BRL':'symbol':'1.0-0') : '' }}</span><i [style.height.%]="point.height"></i><small>{{ point.label }}</small></div> }
+      </div>
+    </article>
+    <article class="dashboard-card">
+      <div class="dashboard-card__header"><div><h2>Modalidades</h2><p>Distribuição das vendas confirmadas</p></div><tabler-icon [icon]="iconChart" [size]="21" /></div>
+      <div class="modality-list">@for (item of topModalities(); track item.label) { <div class="modality"><div><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div><div class="modality__track"><i [style.width.%]="saleCount() ? (item.value / saleCount()) * 100 : 0"></i></div></div> }</div>
+    </article>
+  </div>
+
+  <section class="dashboard__section"><div class="dashboard__section-title"><div><p class="dashboard__eyebrow">Atenção</p><h2>Operação do dia</h2></div><span class="dashboard__section-caption">Indicadores atuais</span></div>
+    <div class="dashboard__alerts">
+      <a class="alert-card alert-card--warning" routerLink="/estoque"><tabler-icon [icon]="iconAlert" [size]="21" /><span><strong>{{ lowStock() }} itens críticos</strong><small>Estoque baixo ou zerado</small></span><b>→</b></a>
+      <a class="alert-card alert-card--info" routerLink="/fornecedores"><tabler-icon [icon]="iconTruck" [size]="21" /><span><strong>{{ deliveries() }} entregas</strong><small>Aguardando chegada</small></span><b>→</b></a>
+      <a class="alert-card" routerLink="/caixa"><tabler-icon [icon]="iconCash" [size]="21" /><span><strong>{{ cashOpen() ? 'Caixa aberto' : 'Caixa fechado' }}</strong><small>Sessão atual</small></span><b>→</b></a>
+    </div>
+  </section>
+
+  <div class="dashboard__bottom-grid"><a class="summary-card" routerLink="/compras"><span><tabler-icon [icon]="iconCart" [size]="19" /> Compras hoje</span><strong>{{ purchaseTotal() | currency: 'BRL' }}</strong><small>entradas registradas</small></a><a class="summary-card" routerLink="/despesas"><span><tabler-icon [icon]="iconReceipt" [size]="19" /> Compromissos hoje</span><strong>{{ expensesToday() | currency: 'BRL' }}</strong><small>despesas com vencimento hoje</small></a><div class="summary-card summary-card--neutral"><span><tabler-icon [icon]="iconStock" [size]="19" /> Valor do estoque</span><strong>{{ inventoryValue() | currency: 'BRL' }}</strong><small>estimativa dos itens cadastrados</small></div></div>
 </section>

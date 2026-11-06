@@ -14,9 +14,13 @@
     />
     <script>
       (() => {
-        const theme = localStorage.getItem('nihil.theme');
-        if (['light', 'sand', 'dusk', 'midnight', 'obsidian'].includes(theme)) {
-          document.documentElement.dataset.theme = theme;
+        try {
+          const theme = localStorage.getItem('nihil.theme');
+          if (['light', 'sand', 'dusk', 'midnight', 'obsidian'].includes(theme)) {
+            document.documentElement.dataset.theme = theme;
+          }
+        } catch {
+          // Continue with Nihil Light when browser storage is unavailable.
         }
       })();
     </script>

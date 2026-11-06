@@ -32,7 +32,10 @@ export class AuthService {
     sessionStorage.setItem(AUTH_KEY, token);
     this.token.set(token);
     this.username.set(username.trim());
-    await this.remoteStorage.hydrate();
+    // Do not block navigation on the workspace hydration. Render may need to
+    // wake the API from sleep; the authenticated shell can open while data
+    // continues loading in the background.
+    void this.remoteStorage.hydrate();
   }
 
   logout(): void {

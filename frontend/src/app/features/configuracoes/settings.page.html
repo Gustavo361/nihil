@@ -1,13 +1,43 @@
 <section class="settings" aria-labelledby="settings-title">
   <p class="settings__eyebrow">Sistema</p>
   <h1 id="settings-title">Configurações</h1>
-  <p class="settings__lead">Gerencie as opções da sua sessão.</p>
+  <p class="settings__lead">Gerencie o sistema e as preferências do restaurante.</p>
 
-  <article class="settings__card">
-    <div>
-      <h2>Sessão</h2>
-      <p>Encerre sua sessão neste dispositivo.</p>
-    </div>
-    <button type="button" (click)="logout()">Sair da conta</button>
-  </article>
+  <div class="settings__grid">
+    <article class="settings__card settings__card--wide">
+      <div class="settings__section-head">
+        <span class="settings__icon"><tabler-icon [icon]="iconRestaurant" [size]="20" [stroke]="1.8" /></span>
+        <div><h2>Restaurante</h2><p>Dados cadastrais e informações do estabelecimento.</p></div>
+      </div>
+      <span class="settings__status">Em breve</span>
+    </article>
+
+    <article class="settings__card settings__card--wide">
+      <div class="settings__section-head">
+        <span class="settings__icon"><tabler-icon [icon]="iconPalette" [size]="20" [stroke]="1.8" /></span>
+        <div><h2>Aparência</h2><p>Escolha o tema e a preferência visual do sistema.</p></div>
+      </div>
+      <div class="theme-picker" role="radiogroup" aria-label="Tema da interface">
+        @for (theme of themes; track theme.id) {
+          <button type="button" class="theme-card" [class.is-active]="themeId() === theme.id" role="radio" [attr.aria-checked]="themeId() === theme.id" (click)="setTheme(theme.id)">
+            <span class="theme-card__preview" [style.--preview-background]="theme.background" [style.--preview-surface]="theme.surface" [style.--preview-accent]="theme.accent" [style.--preview-text]="theme.text" aria-hidden="true">
+              <i class="theme-card__sidebar"></i><i class="theme-card__panel"></i><i class="theme-card__line"></i>
+            </span>
+            <span class="theme-card__name">{{ theme.name.replace('Nihil ', '') }}</span>
+            @if (themeId() === theme.id) { <span class="theme-card__selected">Selecionado</span> }
+          </button>
+        }
+      </div>
+    </article>
+
+    <a class="settings__card settings__card--link" routerLink="/vendas"><span class="settings__icon"><tabler-icon [icon]="iconCash" [size]="20" [stroke]="1.8" /></span><span><h2>Vendas e caixa</h2><p>Consulte vendas, recebimentos e regras operacionais.</p></span><span class="settings__arrow">→</span></a>
+    <a class="settings__card settings__card--link" routerLink="/estoque"><span class="settings__icon"><tabler-icon [icon]="iconStock" [size]="20" [stroke]="1.8" /></span><span><h2>Estoque</h2><p>Acompanhe alertas, unidades e conferências.</p></span><span class="settings__arrow">→</span></a>
+    <a class="settings__card settings__card--link" routerLink="/cargos-permissoes"><span class="settings__icon"><tabler-icon [icon]="iconSecurity" [size]="20" [stroke]="1.8" /></span><span><h2>Segurança</h2><p>Gerencie acessos e permissões da equipe.</p></span><span class="settings__arrow">→</span></a>
+    <article class="settings__card settings__card--link settings__card--muted"><span class="settings__icon"><tabler-icon [icon]="iconData" [size]="20" [stroke]="1.8" /></span><span><h2>Dados e manutenção</h2><p>Exportações, backups e informações técnicas.</p></span><span class="settings__status">Em breve</span></article>
+
+    <article class="settings__card settings__card--wide settings__session">
+      <div class="settings__section-head"><span class="settings__icon"><tabler-icon [icon]="iconLock" [size]="20" [stroke]="1.8" /></span><div><h2>Sessão</h2><p>Encerre sua sessão neste dispositivo.</p></div></div>
+      <button type="button" class="settings__logout" (click)="logout()"><tabler-icon [icon]="iconLogout" [size]="17" [stroke]="2" /> Sair da conta</button>
+    </article>
+  </div>
 </section>

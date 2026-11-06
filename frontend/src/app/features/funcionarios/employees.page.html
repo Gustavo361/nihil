@@ -13,14 +13,6 @@
     </button>
   </div>
 
-  <div class="notice" role="note">
-    <p>
-      Dados em <strong>localStorage</strong>. O custo mensal é um valor
-      <strong>registrado para gestão</strong> — não calcula encargos legais automaticamente.
-      Use a <a routerLink="/folha">Folha de Pagamento</a> para confirmar o total do período.
-    </p>
-  </div>
-
   <div class="employees__kpis">
     <article class="kpi">
       <tabler-icon class="kpi__icon" [icon]="iconUsers" [size]="22" [stroke]="1.75" aria-hidden="true" />
@@ -185,7 +177,30 @@
               </div>
               <div class="modal-form__field">
                 <label for="emp-password">Senha</label>
-                <input id="emp-password" type="password" name="password" autocomplete="new-password" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" />
+                <div class="password-field">
+                  <input
+                    id="emp-password"
+                    [type]="passwordVisible() ? 'text' : 'password'"
+                    name="password"
+                    autocomplete="new-password"
+                    [ngModel]="formPassword()"
+                    (ngModelChange)="formPassword.set($event)"
+                  />
+                  <button
+                    type="button"
+                    class="password-field__toggle"
+                    [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                    [attr.aria-pressed]="passwordVisible()"
+                    (click)="togglePasswordVisibility()"
+                  >
+                    <tabler-icon
+                      [icon]="passwordVisible() ? iconEyeOff : iconEye"
+                      [size]="18"
+                      [stroke]="1.9"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
                 <small>Mínimo de 12 caracteres. O funcionário poderá entrar com usuário ou e-mail.</small>
               </div>
             }

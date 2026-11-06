@@ -40,11 +40,21 @@ export class ThemeService {
 
   private apply(themeId: ThemeId, persist: boolean): void {
     this.document.documentElement.dataset['theme'] = themeId;
-    if (persist) localStorage.setItem(STORAGE_KEY, themeId);
+    if (persist) {
+      try {
+        localStorage.setItem(STORAGE_KEY, themeId);
+      } catch {
+        // Storage can be unavailable in restricted browser contexts; the theme still applies for this session.
+      }
+    }
   }
 
   private readStoredTheme(): ThemeId {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return NIHIL_THEMES.some((theme) => theme.id === stored) ? stored as ThemeId : 'light';
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return NIHIL_THEMES.some((theme) => theme.id === stored) ? stored as ThemeId : 'light';
+    } catch {
+      return 'light';
+    }
   }
 }

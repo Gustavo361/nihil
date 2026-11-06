@@ -2,6 +2,8 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  IconEye,
+  IconEyeOff,
   IconPlus,
   IconSearch,
   IconUsers,
@@ -45,6 +47,8 @@ export class EmployeesPage {
   readonly iconSearch = IconSearch;
   readonly iconUsers = IconUsers;
   readonly iconClose = IconX;
+  readonly iconEye = IconEye;
+  readonly iconEyeOff = IconEyeOff;
   readonly statusLabel = employeeStatusLabel;
 
   readonly search = signal('');
@@ -65,6 +69,7 @@ export class EmployeesPage {
   readonly formUsername = signal('');
   readonly formEmail = signal('');
   readonly formPassword = signal('');
+  readonly passwordVisible = signal(false);
 
   readonly statusFilterOptions: NihilSelectOption[] = [
     { value: '', label: 'Todas as situações' },
@@ -120,6 +125,7 @@ export class EmployeesPage {
     this.formUsername.set('');
     this.formEmail.set('');
     this.formPassword.set('');
+    this.passwordVisible.set(false);
     this.formError.set('');
     this.modal.set('form');
   }
@@ -137,6 +143,7 @@ export class EmployeesPage {
     this.formUsername.set(access?.username ?? '');
     this.formEmail.set('');
     this.formPassword.set('');
+    this.passwordVisible.set(false);
     this.formError.set('');
     this.modal.set('form');
   }
@@ -167,6 +174,10 @@ export class EmployeesPage {
 
   setFormAccessEnabled(enabled: boolean): void {
     this.formAccessEnabled.set(enabled);
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
   }
 
   async save(): Promise<void> {
@@ -210,7 +221,11 @@ export class EmployeesPage {
       headers: { Authorization: `Basic ${this.auth.token()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password, displayName }),
     });
-    if (!response.ok) throw new Error('Não foi possível criar o login. Verifique se usuário ou e-mail já estão em uso.');
+    if (!response.ok) {
+      if (response.status === 409) throw new Error('Usuário ou e-mail já está em uso.');
+      if (response.status === 400) throw new Error('Confira os dados do acesso e tente novamente.');
+      throw new Error('Não foi possível criar o login agora. Tente novamente.');
+    }
   }
 
   deactivate(emp: Employee): void {

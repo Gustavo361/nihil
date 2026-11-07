@@ -333,3 +333,60 @@
     border-radius: var(--nihil-radius-lg) 0 0 0;
   }
 }
+
+@media (max-width: 640px) {
+  .shell__header {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 68px 12px 12px;
+  }
+
+  .shell__title {
+    min-width: 0;
+    font-size: 1.15rem;
+    line-height: 1.25;
+  }
+
+  .shell__title span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .shell__actions {
+    gap: 6px;
+  }
+
+  .shell__action {
+    width: 38px;
+    height: 38px;
+  }
+
+  .shell__dropdown {
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    min-width: 0;
+    max-width: none;
+    max-height: calc(100dvh - 76px);
+    overflow: auto;
+  }
+
+  .shell__dropdown--notifications {
+    width: auto;
+  }
+
+  .shell__panel {
+    padding: 12px;
+    border-radius: 20px 0 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__sidebar,
+  .shell__action,
+  .shell__dropdown-item {
+    transition: none;
+  }
+}

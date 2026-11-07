@@ -91,6 +91,8 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
   font-family: var(--nihil-font);
   color: var(--nihil-text);
   background: var(--background);
@@ -100,6 +102,37 @@ body {
 
 body {
   -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --nihil-space-2: 12px;
+    --nihil-space-3: 16px;
+    --nihil-space-4: 20px;
+    --nihil-radius-lg: 20px;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    min-height: 42px;
+  }
 }
 
 *::-webkit-scrollbar {
